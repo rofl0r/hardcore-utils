@@ -1,3 +1,4 @@
+config.mak
 *.o
 *.lo
 *.a
