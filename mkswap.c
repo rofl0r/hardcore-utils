@@ -21,7 +21,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-
+#ifdef USE_LIBULZ
+#include <ulz/stdio-repl.h>
+#endif
 
 __attribute__((noreturn))
 void usage(void) {

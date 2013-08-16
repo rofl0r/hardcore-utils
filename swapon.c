@@ -2,6 +2,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef USE_LIBULZ
+#include <ulz/stdio-repl.h>
+#endif
 
 __attribute__((noreturn))
 void usage(void) {
