@@ -36,41 +36,37 @@
 #include <sys/ioctl.h>
 
 static FILE *ofd, *ifd;
+static int *line_ptr;
+
 static int ifd_class;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
-
-static char whitespace[256];
-static char word[80];			/* Current word */
-static int no_nl = 1;			/* Next NL in input file is ignored */
-static int catmode = 1;		/* Have we seen a '.XX' command ? */
-
 static int keep_nl;		/* How many nl to keep til eof */
 static int optional_keep;		/* Is the next keep optional ? */
 static int pending_nl;		/* Is there a pending newline on output? */
 static int no_fill;		/* Disable 'filling' of lines */
-static int right_adjust = 1;		/* Adjust right margin */
-
-static int standard_tab = 5;		/* Amount left margin stepped by */
 static int left_indent;		/* Current step of left margin */
 static int old_para_indent;	/* Indent to go back to after this paragraph */
-static int next_line_indent = -1;	/* Indent after next line_break */
-static int input_tab = 8;		/* Tab width in input file */
-
-static int right_margin = 65;		/* Don't print past this column */
 static int is_tty;
 static int current_line;		/* Line number = ? */
 static int gaps_on_line;		/* Gaps on line for adjustments */
+static int flg_w;
 
-static int *line_ptr;
 static int line[256];			/* Buffer for building output line */
-static int cur_font = 0x100;		/* Current font, 1 == Roman */
-
+static char whitespace[256];
 static char line_header[256];	/* Page header line */
 static char doc_footer[256];	/* Document footer line */
-
 static char man_file[256];
+static char word[80];			/* Current word */
 
-static int flg_w;
+static int right_margin = 65;		/* Don't print past this column */
 static int verbose = 1;
+static int no_nl = 1;			/* Next NL in input file is ignored */
+static int catmode = 1;		/* Have we seen a '.XX' command ? */
+static int cur_font = 0x100;		/* Current font, 1 == Roman */
+static int next_line_indent = -1;	/* Indent after next line_break */
+static int input_tab = 8;		/* Tab width in input file */
+static int right_adjust = 1;		/* Adjust right margin */
+static int standard_tab = 5;		/* Amount left margin stepped by */
+
 
 static int find_page(char *name, char *sect);
 static void step(char **pcurr, char **pnext);
