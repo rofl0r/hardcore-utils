@@ -588,8 +588,6 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 	int i, ch;
 	int in_quote = 0;
 	
-	if(!is_tty && this_font) this_font = 1;
-
 	no_nl = 0;		/* Line is effectivly been reprocessed so NL is visable */
 	for(;;) {
 		if(p == word) {
@@ -855,7 +853,8 @@ static void print_word(char *pword) {
 				break;
 			s++;
 			if(*s == 'f') {
-				if(s[1]) {
+				if(!is_tty) s++;
+				else if(s[1]) {
 					static char fnt[] = " RBI";
 					char *p = strchr(fnt, *++s);
 					if(p == 0)
