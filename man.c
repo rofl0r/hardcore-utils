@@ -88,7 +88,7 @@ static void print_doc_footer(void);
 
 static void usage(void)
 {
-	fprintf(stderr, "man [-w] [-b|-q] [section-number] page\n"
+	fprintf(stderr, "man [-w] [-v|-q] [section-number] page\n"
 	"-w\tonly print the location of matching manpages\n"
 	"-v\tForce verbose output. (default)\n"
 	"-q\tForce quiet output.\n");
