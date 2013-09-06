@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 
 FILE *ofd, *ifd;
 int ifd_class = 0;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
@@ -190,8 +191,7 @@ static int find_page(char *name, char *sect) {
 
 	if(strchr(name, '/')) {
 		for(su = nsu = mansuff, step(&su, &nsu); su; step(&su, &nsu)) {
-			strcpy(fbuf, name);
-			strcat(fbuf, su);
+			snprintf(fbuf, sizeof(fbuf), "%s%s", name, su);
 			if((rv = open_page(fbuf)) >= 0)
 				break;
 		}
@@ -204,7 +204,7 @@ static int find_page(char *name, char *sect) {
 		for(ms = nms = mansect, step(&ms, &nms); ms; step(&ms, &nms))
 			for(mp = nmp = manpath, step(&mp, &nmp); mp; step(&mp, &nmp))
 				for(su = nsu = mansuff, step(&su, &nsu); su; step(&su, &nsu)) {
-					sprintf(fbuf, "%s/%s%s/%s.%s%s", mp, mc, ms, name, ms, su);
+					snprintf(fbuf, sizeof fbuf, "%s/%s%s/%s.%s%s", mp, mc, ms, name, ms, su);
 
 					/* Got it ? */
 					if(access(fbuf, 0) < 0)
@@ -218,7 +218,7 @@ static int find_page(char *name, char *sect) {
 					/* Try it ! */
 					if((rv = open_page(fbuf)) >= 0) {
 						char *p;
-						strcpy(man_file, fbuf);
+						snprintf(man_file, sizeof man_file, "%s", fbuf);
 						p = strrchr(man_file, '/');
 						if(p)
 							*p = 0;
@@ -272,8 +272,7 @@ static int open_page(char *name) {
 	}
 
 	if(command) {
-		strcpy(buf, command);
-		strcat(buf, name);
+		snprintf(buf, sizeof buf, "%s%s", command, name);
 		ifd = popen(buf, "r");
 		if(ifd == 0)
 			return -1;
@@ -527,8 +526,7 @@ static int do_command(void) {
 			line_break();
 			i = left_indent;
 			left_indent = 0;
-			strcpy(word, "**** Unknown formatter command: .");
-			strcat(word, lbuf);
+			snprintf(word, sizeof word, "**** Unknown formatter command: .%s", lbuf);
 			print_word(word);
 			line_break();
 			left_indent = i;
@@ -546,7 +544,8 @@ static int do_command(void) {
 
 		case 3:	/* .so */
 			fetch_word();
-			strcat(man_file, word);
+			if(strlen(man_file) + 4 < sizeof man_file)
+				strcat(man_file, word);
 			close_page();
 			if(find_page(man_file, (char *) 0) < 0) {
 				fprintf(stderr, "Cannot open .so file %s\n", word);
@@ -575,6 +574,7 @@ static void do_skipeol(void) {
 }
 
 static int do_fontwords(int this_font, int other_font, int early_exit) {
+#define checkp(X) assert(p+X+1<word+sizeof word)
 	static char ftab[] = " RBIS";
 	char *p = word;
 	int i, ch;
@@ -595,6 +595,7 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 		}
 		if(in_quote || !isspace(ch)) {
 			if(isspace(ch) && p > word + 3) {
+				checkp(4);
 				strcpy(p, "\\fR");
 				p += 3;
 				*p = 0;
@@ -620,6 +621,7 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 				break;
 
 			if(this_font == other_font) {
+				checkp(4);
 				strcpy(p, "\\fR");
 				p += 3;
 				*p = 0;
@@ -639,6 +641,7 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 	ungetc(ch, ifd);
 
 	if(p > word + 3) {
+		checkp(4);
 		strcpy(p, "\\fR");
 		p += 3;
 		*p = 0;
@@ -646,6 +649,7 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 	}
 
 	return 0;
+#undef checkp
 }
 
 static int do_noargs(int cmd_id) {
@@ -798,23 +802,17 @@ static void build_headers(void) {
 	ungetc(ch, ifd);
 
 	/* Ok we should have upto 5 arguments build the header and footer */
-
-	memset(little_header, ' ', right_margin);
-
-	memset(line_header, ' ', right_margin);
-	strcpy(line_header, buffer[0]);
-	strcat(line_header, "(");
-	strcat(line_header, buffer[1]);
-	strcat(line_header, ")");
-	ch = strlen(line_header);
-	strcpy(line_header + right_margin - ch, line_header);
-	line_header[ch] = ' ';
+	
+	size_t l1 = strlen(buffer[0]), l = l1 + strlen(buffer[1]) + 2;
+	snprintf(line_header, sizeof line_header, "%s(%s)%*s(%s)", buffer[0],
+	         buffer[1], (int) right_margin-l-l+l1, buffer[0], buffer[1]);
 
 	ch = strlen(buffer[4]);
 	if(ch > right_margin)
 		ch = right_margin - 12;
 	memcpy(line_header + right_margin / 2 - ch / 2, buffer[4], ch);
 
+	memset(little_header, ' ', right_margin);
 	memcpy(little_header, line_header, right_margin / 2 + ch / 2 + 1);
 	strcpy(little_header + right_margin - strlen(buffer[2]), buffer[2]);
 
