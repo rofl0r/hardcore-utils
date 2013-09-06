@@ -36,41 +36,41 @@
 #include <sys/ioctl.h>
 
 static FILE *ofd, *ifd;
-int ifd_class = 0;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
+static int ifd_class;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
 
-char whitespace[256];
-char word[80];			/* Current word */
-int no_nl = 1;			/* Next NL in input file is ignored */
-int catmode = 1;		/* Have we seen a '.XX' command ? */
+static char whitespace[256];
+static char word[80];			/* Current word */
+static int no_nl = 1;			/* Next NL in input file is ignored */
+static int catmode = 1;		/* Have we seen a '.XX' command ? */
 
-int keep_nl = 0;		/* How many nl to keep til eof */
-int optional_keep = 0;		/* Is the next keep optional ? */
-int pending_nl = 0;		/* Is there a pending newline on output? */
-int no_fill = 0;		/* Disable 'filling' of lines */
-int right_adjust = 1;		/* Adjust right margin */
+static int keep_nl;		/* How many nl to keep til eof */
+static int optional_keep;		/* Is the next keep optional ? */
+static int pending_nl;		/* Is there a pending newline on output? */
+static int no_fill;		/* Disable 'filling' of lines */
+static int right_adjust = 1;		/* Adjust right margin */
 
-int standard_tab = 5;		/* Amount left margin stepped by */
-int left_indent = 0;		/* Current step of left margin */
-int old_para_indent = 0;	/* Indent to go back to after this paragraph */
-int next_line_indent = -1;	/* Indent after next line_break */
-int input_tab = 8;		/* Tab width in input file */
+static int standard_tab = 5;		/* Amount left margin stepped by */
+static int left_indent;		/* Current step of left margin */
+static int old_para_indent;	/* Indent to go back to after this paragraph */
+static int next_line_indent = -1;	/* Indent after next line_break */
+static int input_tab = 8;		/* Tab width in input file */
 
-int right_margin = 65;		/* Don't print past this column */
+static int right_margin = 65;		/* Don't print past this column */
 static int is_tty;
-int current_line = 0;		/* Line number = ? */
-int gaps_on_line = 0;		/* Gaps on line for adjustments */
+static int current_line;		/* Line number = ? */
+static int gaps_on_line;		/* Gaps on line for adjustments */
 
-int *line_ptr = 0;
-int line[256];			/* Buffer for building output line */
-int cur_font = 0x100;		/* Current font, 1 == Roman */
+static int *line_ptr;
+static int line[256];			/* Buffer for building output line */
+static int cur_font = 0x100;		/* Current font, 1 == Roman */
 
-char line_header[256] = "";	/* Page header line */
-char doc_footer[256] = "";	/* Document footer line */
+static char line_header[256];	/* Page header line */
+static char doc_footer[256];	/* Document footer line */
 
-char man_file[256] = "";
+static char man_file[256];
 
-int flg_w = 0;
-int verbose = 1;
+static int flg_w;
+static int verbose = 1;
 
 static int find_page(char *name, char *sect);
 static void step(char **pcurr, char **pnext);
