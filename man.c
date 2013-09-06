@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/ioctl.h>
 
 FILE *ofd, *ifd;
 int ifd_class = 0;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
@@ -154,6 +155,12 @@ int main(int argc, char **argv) {
 		else {
 			do_pclose_ofd = 1;
 			page_length = 0;
+#ifdef TIOCGWINSZ
+			struct winsize ws; 
+			if(!ioctl(0, TIOCGWINSZ, &ws))
+				right_margin = ws.ws_col>251 ? 250 : ws.ws_col-2;
+			else
+#endif
 			right_margin = 78;
 		}
 	}
