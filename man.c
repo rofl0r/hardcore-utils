@@ -177,6 +177,8 @@ int main(int argc, char **argv) {
 	exit(0);
 }
 
+#define IS_TTY (page_length == 0)
+
 static int find_page(char *name, char *sect) {
 	static char defpath[] = "/usr/local/share/man:/usr/share/man";
 	static char defsect[] = "1p:1:2:3p:3:4:5:6:7:8:9:0p";
@@ -589,6 +591,8 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 	char *p = word;
 	int i, ch;
 	int in_quote = 0;
+	
+	if(!IS_TTY && this_font) this_font = 1;
 
 	no_nl = 0;		/* Line is effectivly been reprocessed so NL is visable */
 	for(;;) {
