@@ -53,11 +53,10 @@ int standard_tab = 5;		/* Amount left margin stepped by */
 int left_indent = 0;		/* Current step of left margin */
 int old_para_indent = 0;	/* Indent to go back to after this paragraph */
 int next_line_indent = -1;	/* Indent after next line_break */
-int page_no = 1;		/* Page number */
 int input_tab = 8;		/* Tab width in input file */
 
 int right_margin = 65;		/* Don't print past this column */
-int page_length = 66;		/* Lines on page */
+static int is_tty;
 int current_line = 0;		/* Line number = ? */
 int gaps_on_line = 0;		/* Gaps on line for adjustments */
 
@@ -66,7 +65,6 @@ int line[256];			/* Buffer for building output line */
 int cur_font = 0x100;		/* Current font, 1 == Roman */
 
 char line_header[256] = "";	/* Page header line */
-char line_footer[256] = "";	/* Page footer line */
 char doc_footer[256] = "";	/* Document footer line */
 
 char man_file[256] = "";
@@ -90,7 +88,6 @@ static void print_word(char *pword);
 static void line_break(void);
 static void page_break(void);
 static void print_header(void);
-static void print_footer(void);
 static void print_doc_footer(void);
 
 /****************************************************************************
@@ -148,6 +145,8 @@ int main(int argc, char **argv) {
 
 	/* ifd is now the file - display it */
 	if(isatty(1)) {		/* If writing to a tty do it to a pager */
+		is_tty = 1;
+
 		ofd = popen(getenv("PAGER"), "w");
 		if(ofd == 0)
 			ofd = popen("less", "w");
@@ -157,7 +156,6 @@ int main(int argc, char **argv) {
 			ofd = stdout;
 		else {
 			do_pclose_ofd = 1;
-			page_length = 0;
 #ifdef TIOCGWINSZ
 			struct winsize ws; 
 			if(!ioctl(0, TIOCGWINSZ, &ws))
@@ -176,8 +174,6 @@ int main(int argc, char **argv) {
 	close_page();
 	exit(0);
 }
-
-#define IS_TTY (page_length == 0)
 
 static int find_page(char *name, char *sect) {
 	static char defpath[] = "/usr/local/share/man:/usr/share/man";
@@ -592,7 +588,7 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 	int i, ch;
 	int in_quote = 0;
 	
-	if(!IS_TTY && this_font) this_font = 1;
+	if(!is_tty && this_font) this_font = 1;
 
 	no_nl = 0;		/* Line is effectivly been reprocessed so NL is visable */
 	for(;;) {
@@ -829,9 +825,6 @@ static void build_headers(void) {
 	snprintf(doc_footer, sizeof doc_footer, "%s%*s%*s(%s)", buffer[3],
 	         (int) right_margin/2-l3+l2/2+(l2&1), buffer[2],
 	         (int) right_margin/2-l2/2-l01+l0-(l2&1), buffer[0], buffer[1]);
-	snprintf(line_footer, sizeof line_footer, "%s%*s%*s", buffer[3],
-	         (int) right_margin/2-l3+l2/2+(l2&1), buffer[2],
-	         (int) right_margin/2-l2/2-6-(l2&1), "");
 
 	do_skipeol();
 }
@@ -941,11 +934,6 @@ static void line_break(void) {
 	if(current_line == 0)
 		print_header();
 
-	if(page_length > 12 && current_line + pending_nl > page_length - 6) {
-		print_footer();
-		print_header();
-	}
-
 	if(current_line)
 		current_line += 1 + pending_nl;
 	for(; pending_nl > 0; pending_nl--)
@@ -1019,33 +1007,18 @@ static void line_break(void) {
 
 static void page_break(void) {
 	line_break();
-	if(current_line)
-		print_footer();
 }
 
 static void print_header(void) {
 	pending_nl = 0;
 
-	if(*line_header && page_length) {
+	if(*line_header && !is_tty) {
 		current_line = 7;
 		fprintf(ofd, "\n\n\n%s\n\n\n", line_header);
-	} else if(*line_header && !page_length) {
+	} else if(*line_header) {
 		current_line = 1;
 		fprintf(ofd, "%s\n\n", line_header);
 	}
-}
-
-static void print_footer(void) {
-	if(!page_length)
-		return;
-
-	while(current_line <= page_length - 3) {
-		fputc('\n', ofd);
-		current_line++;
-	}
-
-	fprintf(ofd, "%s%6d\n\n\n", line_footer, page_no++);
-	current_line = 0;
 }
 
 static void print_doc_footer(void) {
