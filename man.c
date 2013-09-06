@@ -66,7 +66,6 @@ int cur_font = 0x100;		/* Current font, 1 == Roman */
 char line_header[256] = "";	/* Page header line */
 char line_footer[256] = "";	/* Page footer line */
 char doc_footer[256] = "";	/* Document footer line */
-char little_header[256] = "";	/* Mini header for tty mode */
 
 char man_file[256] = "";
 
@@ -827,10 +826,6 @@ static void build_headers(void) {
 		ch = right_margin - 12;
 	memcpy(line_header + right_margin / 2 - ch / 2, buffer[4], ch);
 
-	memset(little_header, ' ', right_margin);
-	memcpy(little_header, line_header, right_margin / 2 + ch / 2 + 1);
-	strcpy(little_header + right_margin - l2, buffer[2]);
-
 	memset(line_footer, ' ', right_margin - 6);
 	line_footer[right_margin - 6] = 0;
 	memcpy(line_footer, buffer[3], l3);
@@ -1037,9 +1032,9 @@ static void print_header(void) {
 	if(*line_header && page_length) {
 		current_line = 7;
 		fprintf(ofd, "\n\n\n%s\n\n\n", line_header);
-	} else if(*little_header && !page_length) {
+	} else if(*line_header && !page_length) {
 		current_line = 1;
-		fprintf(ofd, "%s\n\n", little_header);
+		fprintf(ofd, "%s\n\n", line_header);
 	}
 }
 
