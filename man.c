@@ -167,8 +167,8 @@ int main(int argc, char **argv) {
 }
 
 static int find_page(char *name, char *sect) {
-	static char defpath[] = "/usr/local/man:/usr/man";
-	static char defsect[] = "1:2:3:4:5:6:7:8:9";
+	static char defpath[] = "/usr/local/share/man:/usr/share/man";
+	static char defsect[] = "1p:1:2:3p:3:4:5:6:7:8:9:0p";
 	static char defsuff[] = ":.gz:.Z";
 	static char manorcat[] = "man:cat";
 
