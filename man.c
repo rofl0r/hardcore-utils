@@ -145,6 +145,8 @@ int main(int argc, char **argv) {
 	if(isatty(1)) {		/* If writing to a tty do it to a pager */
 		ofd = popen(getenv("PAGER"), "w");
 		if(ofd == 0)
+			ofd = popen("less", "w");
+		if(ofd == 0)
 			ofd = popen("more", "w");
 		if(ofd == 0)
 			ofd = stdout;
