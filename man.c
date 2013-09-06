@@ -86,6 +86,15 @@ static void page_break(void);
 static void print_header(void);
 static void print_doc_footer(void);
 
+static void usage(void)
+{
+	fprintf(stderr, "man [-w] [-b|-q] [section-number] page\n"
+	"-w\tonly print the location of matching manpages\n"
+	"-v\tForce verbose output. (default)\n"
+	"-q\tForce quiet output.\n");
+	exit(1);
+}
+
 /****************************************************************************
  * Main routine, hunt down the manpage.
  */
@@ -124,10 +133,7 @@ int main(int argc, char **argv) {
 			break;
 		}
 
-	if(manname == 0) {
-		fprintf(stderr, "Which manpage ?\n");
-		exit(1);
-	}
+	if(manname == 0) usage();
 
 	if(find_page(manname, mansect) < 0) {
 		if(mansect > 0)
