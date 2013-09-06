@@ -26,15 +26,12 @@
 #define DONT_SPLATTER /* Lots of messages out */
 
 #include <stdio.h>
-#ifdef __STDC__
 #include <stdlib.h>
 #include <unistd.h>
-#endif
 #include <ctype.h>
 #include <string.h>
 
-FILE * ofd = stdout;
-FILE * ifd = stdin;
+FILE *ofd,*ifd;
 int ifd_class = 0;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
 
 char whitespace[256];
@@ -73,13 +70,31 @@ char man_file[256] = "";
 int flg_w = 0;
 int verbose = 1;
 
+static int find_page(char *name, char* sect);
+static void step(char **pcurr, char **pnext);
+static int open_page(char *name);
+static void close_page(void);
+static void do_file(void);
+static int fetch_word(void);
+static int do_command(void);
+static void do_skipeol(void);
+static int do_fontwords(int this_font, int other_font, int early_exit);
+static int do_noargs(int cmd_id);
+static int do_argvcmd(int cmd_id);
+static void build_headers(void);
+static void print_word(char *pword);
+static void line_break(void);
+static void page_break(void);
+static void print_header(void);
+static void print_footer(void);
+
 /****************************************************************************
  * Main routine, hunt down the manpage.
  */
-main(argc, argv)
-int argc;
-char ** argv;
+int main(int argc, char** argv)
 {
+   ofd = stdout;
+   ifd = stdin;
    int do_pclose_ofd = 0;
    int ar;
    char * mansect = 0;
@@ -145,9 +160,7 @@ char ** argv;
    exit(0);
 }
 
-find_page(name, sect)
-char * name;
-char * sect;
+static int find_page(char *name, char* sect)
 {
 static char defpath[] = "/usr/local/man:/usr/man";
 static char defsect[] = "1:2:3:4:5:6:7:8:9";
@@ -211,8 +224,7 @@ static char manorcat[] = "man:cat";
    return rv;
 }
 
-step(pcurr, pnext)
-char **pcurr, **pnext;
+static void step(char **pcurr, char **pnext)
 {
    char * curr = *pcurr;
    char * next = *pnext;
@@ -238,8 +250,7 @@ char **pcurr, **pnext;
    *pnext = next;
 }
 
-open_page(name)
-char * name;
+static int open_page(char *name)
 {
    char *p, *command = 0;
    char buf[256];
@@ -270,7 +281,7 @@ char * name;
    return 0;
 }
 
-close_page()
+static void close_page(void)
 {
    switch(ifd_class)
    {
@@ -345,7 +356,7 @@ struct cmd_list_s {
 /****************************************************************************
  * ifd is the manual page, ofd is the 'output' file or pipe, format it! 
  */
-do_file()
+static void do_file(void)
 {
    int nl;
    ungetc('\r', ifd);
@@ -421,7 +432,7 @@ do_file()
    page_break();
 }
 
-fetch_word()
+static int fetch_word(void)
 {
 static int col = 0;
    char * p;
@@ -500,7 +511,7 @@ static int col = 0;
    return (nl != 0);
 }
 
-do_command()
+static int do_command(void)
 {
    char * cmd;
    int ch, i;
@@ -562,7 +573,7 @@ do_command()
    return 0;
 }
 
-do_skipeol()
+static void do_skipeol(void)
 {
    int ch;
    char * p = word;
@@ -573,8 +584,7 @@ do_skipeol()
    ungetc(ch, ifd);
 }
 
-do_fontwords(this_font, other_font, early_exit)
-int this_font, other_font, early_exit;
+static int do_fontwords(int this_font, int other_font, int early_exit)
 {
 static char ftab[] = " RBIS";
    char *p=word;
@@ -640,8 +650,7 @@ static char ftab[] = " RBIS";
    return 0;
 }
 
-do_noargs(cmd_id)
-int cmd_id;
+static int do_noargs(int cmd_id)
 {
    if( cmd_id < 10 ) line_break();
    switch(cmd_id)
@@ -670,8 +679,7 @@ int cmd_id;
    return 0;
 }
 
-do_argvcmd(cmd_id)
-int cmd_id;
+static int do_argvcmd(int cmd_id)
 {
    int ch;
 
@@ -732,7 +740,7 @@ int cmd_id;
    return 0;
 }
 
-build_headers()
+static void build_headers(void)
 {
    char buffer[5][80];
    int  strno=0, stroff=0;
@@ -802,8 +810,7 @@ build_headers()
    do_skipeol();
 }
 
-print_word(pword)
-char * pword;
+static void print_word(char *pword)
 {
 /* Eat   \&  \a .. \z and \A .. \Z
  * \fX   Switch to font X (R B I S etc)
@@ -893,7 +900,7 @@ char * pword;
    line_ptr += length;
 }
 
-line_break()
+static void line_break(void)
 {
    int * d, ch;
    int spg=1, rspg=1, spgs=0, gap=0;
@@ -978,14 +985,14 @@ line_break()
    gaps_on_line=0;
 }
 
-page_break()
+static void page_break(void)
 {
    line_break();
    if( current_line )
       print_footer();
 }
 
-print_header()
+static void print_header(void)
 {
    pending_nl = 0;
 
@@ -1001,7 +1008,7 @@ print_header()
    }
 }
 
-print_footer()
+static void print_footer(void)
 {
    if( !page_length ) return;
 
