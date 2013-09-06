@@ -815,26 +815,17 @@ static void build_headers(void) {
 	       l1 = strlen(buffer[1]),
 	       l2 = strlen(buffer[2]),
 	       l3 = strlen(buffer[3]),
+	       l4 = strlen(buffer[4]),
 	       l01 = l0 + l1 + 2;
-	snprintf(line_header, sizeof line_header, "%s(%s)%*s(%s)", buffer[0],
-	         buffer[1], (int) right_margin-l01-l01+l0, buffer[0], buffer[1]);
-	snprintf(doc_footer, sizeof doc_footer, "%s%*s(%s)", buffer[3], 
-	         (int) right_margin-l3-l01+l0, buffer[0], buffer[1]);
-
-	ch = strlen(buffer[4]);
-	if(ch > right_margin)
-		ch = right_margin - 12;
-	memcpy(line_header + right_margin / 2 - ch / 2, buffer[4], ch);
-
-	memset(line_footer, ' ', right_margin - 6);
-	line_footer[right_margin - 6] = 0;
-	memcpy(line_footer, buffer[3], l3);
-
-	ch = l2;
-	if(ch > right_margin)
-		ch = right_margin - 12;
-	memcpy(line_footer + right_margin / 2 - ch / 2, buffer[2], ch);
-	memcpy(doc_footer + right_margin / 2 - ch / 2, buffer[2], ch);
+	snprintf(line_header, sizeof line_header, "%s(%s)%*s%*s(%s)", buffer[0],
+	         buffer[1], (int) right_margin/2-l01+l4/2+(l4&1), buffer[4],
+	         (int) right_margin/2-l4/2-l01+l0-(l4&1), buffer[0], buffer[1]);
+	snprintf(doc_footer, sizeof doc_footer, "%s%*s%*s(%s)", buffer[3],
+	         (int) right_margin/2-l3+l2/2+(l2&1), buffer[2],
+	         (int) right_margin/2-l2/2-l01+l0-(l2&1), buffer[0], buffer[1]);
+	snprintf(line_footer, sizeof line_footer, "%s%*s%*s", buffer[3],
+	         (int) right_margin/2-l3+l2/2+(l2&1), buffer[2],
+	         (int) right_margin/2-l2/2-6-(l2&1), "");
 
 	do_skipeol();
 }
