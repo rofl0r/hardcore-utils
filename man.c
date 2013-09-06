@@ -1,4 +1,6 @@
-/* (C) Robert de Bath 1997 under the terms of the GPL.
+/* (C) 1997 Robert de Bath
+ * (C) 2013 rofl0r
+ * under the terms of the GPL.
  *
  * This is a manual pager program, it will search for and format manual
  * pages which it then pipes to more.
