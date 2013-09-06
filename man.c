@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <sys/ioctl.h>
 
-FILE *ofd, *ifd;
+static FILE *ofd, *ifd;
 int ifd_class = 0;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
 
 char whitespace[256];
@@ -94,7 +94,7 @@ static void print_doc_footer(void);
  * Main routine, hunt down the manpage.
  */
 int main(int argc, char **argv) {
-	ofd = stdout;
+	ofd = 0;
 	ifd = stdin;
 	int do_pclose_ofd = 0;
 	int ar;
@@ -146,14 +146,11 @@ int main(int argc, char **argv) {
 	/* ifd is now the file - display it */
 	if(isatty(1)) {		/* If writing to a tty do it to a pager */
 		is_tty = 1;
-
-		ofd = popen(getenv("PAGER"), "w");
-		if(ofd == 0)
-			ofd = popen("less", "w");
-		if(ofd == 0)
-			ofd = popen("more", "w");
-		if(ofd == 0)
-			ofd = stdout;
+		char *pager = getenv("PAGER");
+		if(pager) ofd = popen(pager, "w");
+		if(!ofd) ofd = popen("less", "w");
+		if(!ofd) ofd = popen("more", "w");
+		if(!ofd) ofd = stdout;
 		else {
 			do_pclose_ofd = 1;
 #ifdef TIOCGWINSZ
@@ -164,7 +161,8 @@ int main(int argc, char **argv) {
 #endif
 			right_margin = 78;
 		}
-	}
+	} else 
+		ofd = stdout;
 
 	do_file();
 
