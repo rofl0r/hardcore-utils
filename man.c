@@ -729,7 +729,7 @@ static int do_argvcmd(int cmd_id) {
 			keep_nl = 1;
 			pending_nl = 1;
 
-			do_fontwords(2, 1, 0);
+			do_fontwords(2, 2, 0);
 			return 0;
 		case 3:	/* Subsection */
 			left_indent = standard_tab / 2;
