@@ -1008,11 +1008,7 @@ static void page_break(void) {
 
 static void print_header(void) {
 	pending_nl = 0;
-
-	if(*line_header && !is_tty) {
-		current_line = 7;
-		fprintf(ofd, "\n\n\n%s\n\n\n", line_header);
-	} else if(*line_header) {
+	if(*line_header) {
 		current_line = 1;
 		fprintf(ofd, "%s\n\n", line_header);
 	}
