@@ -301,10 +301,10 @@ static void close_page(void) {
  * Accepted nroff commands and executors.
  */
 
-struct cmd_list_s {
+const struct cmd_list_s {
 	char cmd[3];
-	int class;
-	int id;
+	char class;
+	char id;
 } cmd_list[] = {
 	{"\\\"", 0, 0}, 
 	{"nh", 0, 0},		/* This program never inserts hyphens */
