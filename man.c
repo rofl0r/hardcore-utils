@@ -65,6 +65,7 @@ int cur_font = 0x100;		/* Current font, 1 == Roman */
 
 char line_header[256] = "";	/* Page header line */
 char line_footer[256] = "";	/* Page footer line */
+char doc_footer[256] = "";	/* Document footer line */
 char little_header[256] = "";	/* Mini header for tty mode */
 
 char man_file[256] = "";
@@ -89,6 +90,7 @@ static void line_break(void);
 static void page_break(void);
 static void print_header(void);
 static void print_footer(void);
+static void print_doc_footer(void);
 
 /****************************************************************************
  * Main routine, hunt down the manpage.
@@ -425,7 +427,7 @@ static void do_file(void) {
 		}
 	}
 
-	page_break();
+	print_doc_footer();
 }
 
 static int fetch_word(void) {
@@ -810,9 +812,15 @@ static void build_headers(void) {
 
 	/* Ok we should have upto 5 arguments build the header and footer */
 	
-	size_t l1 = strlen(buffer[0]), l = l1 + strlen(buffer[1]) + 2;
+	size_t l0 = strlen(buffer[0]),
+	       l1 = strlen(buffer[1]),
+	       l2 = strlen(buffer[2]),
+	       l3 = strlen(buffer[3]),
+	       l01 = l0 + l1 + 2;
 	snprintf(line_header, sizeof line_header, "%s(%s)%*s(%s)", buffer[0],
-	         buffer[1], (int) right_margin-l-l+l1, buffer[0], buffer[1]);
+	         buffer[1], (int) right_margin-l01-l01+l0, buffer[0], buffer[1]);
+	snprintf(doc_footer, sizeof doc_footer, "%s%*s(%s)", buffer[3], 
+	         (int) right_margin-l3-l01+l0, buffer[0], buffer[1]);
 
 	ch = strlen(buffer[4]);
 	if(ch > right_margin)
@@ -821,16 +829,17 @@ static void build_headers(void) {
 
 	memset(little_header, ' ', right_margin);
 	memcpy(little_header, line_header, right_margin / 2 + ch / 2 + 1);
-	strcpy(little_header + right_margin - strlen(buffer[2]), buffer[2]);
+	strcpy(little_header + right_margin - l2, buffer[2]);
 
 	memset(line_footer, ' ', right_margin - 6);
 	line_footer[right_margin - 6] = 0;
-	memcpy(line_footer, buffer[3], strlen(buffer[3]));
+	memcpy(line_footer, buffer[3], l3);
 
-	ch = strlen(buffer[2]);
+	ch = l2;
 	if(ch > right_margin)
 		ch = right_margin - 12;
 	memcpy(line_footer + right_margin / 2 - ch / 2, buffer[2], ch);
+	memcpy(doc_footer + right_margin / 2 - ch / 2, buffer[2], ch);
 
 	do_skipeol();
 }
@@ -1046,3 +1055,11 @@ static void print_footer(void) {
 	fprintf(ofd, "%s%6d\n\n\n", line_footer, page_no++);
 	current_line = 0;
 }
+
+static void print_doc_footer(void) {
+	line_break();
+	int i;
+	for(i = 0; i < 3; i++) fputc('\n', ofd);
+	fprintf(ofd, "%s", doc_footer);
+}
+
