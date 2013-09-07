@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include <strings.h>
 #include <assert.h>
 #include <sys/ioctl.h>
 
@@ -524,6 +525,11 @@ static int do_command(void) {
 
 	for(i = 0; cmd_list[i].cmd[0]; i++) {
 		if(strcmp(cmd_list[i].cmd, cmd) == 0)
+			break;
+	}
+	
+	if(cmd_list[i].cmd[0] == 0) for(i = 0; cmd_list[i].cmd[0]; i++) {
+		if(strcasecmp(cmd_list[i].cmd, cmd) == 0)
 			break;
 	}
 
