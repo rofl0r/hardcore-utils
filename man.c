@@ -588,19 +588,33 @@ static void do_skipeol(void) {
 	ungetc(ch, ifd);
 }
 
+static void flush_word(char **p) {
+	memcpy(*p, "\\fR", 4);
+	print_word(word);
+	*p = word;
+}
+
+static void insert_font(char **p, int font) {
+	const char ftab[] = " RBIS";
+	memcpy(*p, "\\f", 2);
+	(*p)[2] = ftab[font];
+	*p += 3;
+}
+
 static int do_fontwords(int this_font, int other_font, int early_exit) {
-#define checkp(X) assert(p+X+1<word+sizeof word)
-	static char ftab[] = " RBIS";
 	char *p = word;
-	int i, ch;
+	int ch;
 	int in_quote = 0;
 	
-	no_nl = 0;		/* Line is effectivly been reprocessed so NL is visable */
+	no_nl = 0; /* Line is effectivly been reprocessed so NL is visible */
 	for(;;) {
-		if(p == word) {
-			strcpy(p, "\\f");
-			p[2] = ftab[this_font];
-			p += 3;
+		if(p == word) insert_font(&p, this_font);
+		/* at each turn, at most 5 bytes are appended to word
+		 * in order to flush the buffer, 4 more bytes are required to stay free */
+		if(p+5+4 >= word+sizeof word) {
+			assert(p+4<word+sizeof word);
+			flush_word(&p);
+			continue;
 		}
 		if((ch = fgetc(ifd)) == EOF || ch == '\n')
 			break;
@@ -610,61 +624,33 @@ static int do_fontwords(int this_font, int other_font, int early_exit) {
 		}
 		if(in_quote || !isspace(ch)) {
 			if(isspace(ch) && p > word + 3) {
-				checkp(4);
-				strcpy(p, "\\fR");
-				p += 3;
-				*p = 0;
-				print_word(word);
-				p = word;
-				if(no_fill)
-					print_word(" ");
+				flush_word(&p);
+				if(no_fill) print_word(" ");
 				continue;
 			}
-			if(p < word + sizeof(word) - 4)
-				*p++ = ch;
+			*p++ = ch;
 			if(ch == '\\') {
-				if((ch = fgetc(ifd)) == EOF || ch == '\n')
-					break;
-				if(p < word + sizeof(word) - 4)
-					*p++ = ch;
+				if((ch = fgetc(ifd)) == EOF || ch == '\n') break;
+				*p++ = ch;
 			}
 			continue;
 		}
 
 		if(p != word + 3) {
-			if(early_exit)
-				break;
+			if(early_exit) break;
 
-			if(this_font == other_font) {
-				checkp(4);
-				strcpy(p, "\\fR");
-				p += 3;
-				*p = 0;
-				print_word(word);
-				p = word;
-			}
-			i = this_font;
+			if(this_font == other_font) flush_word(&p);
+			int i = this_font;
 			this_font = other_font;
 			other_font = i;
-			if(p < word + sizeof(word) - 4) {
-				strcpy(p, "\\f");
-				p[2] = ftab[this_font];
-				p += 3;
-			}
+			insert_font(&p, this_font);
 		}
 	}
 	ungetc(ch, ifd);
 
-	if(p > word + 3) {
-		checkp(4);
-		strcpy(p, "\\fR");
-		p += 3;
-		*p = 0;
-		print_word(word);
-	}
+	if(p > word + 3) flush_word(&p);
 
 	return 0;
-#undef checkp
 }
 
 static int do_noargs(int cmd_id) {
