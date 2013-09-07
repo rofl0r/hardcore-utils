@@ -308,62 +308,6 @@ static void close_page(void) {
 }
 
 /****************************************************************************
- * Accepted nroff commands and executors.
- */
-
-const struct cmd_list_s {
-	char cmd[3];
-	char class;
-	char id;
-} cmd_list[] = {
-	{"\\\"", 0, 0}, 
-	{"nh", 0, 0},		/* This program never inserts hyphens */
-	{"hy", 0, 0},		/* This program never inserts hyphens */
-	{"PD", 0, 0},		/* Inter-para distance is 1 line */
-	{"DT", 0, 0},		/* Default tabs, they can't be non-default! */
-	{"IX", 0, 0},		/* Indexing for some weird package */
-	{"Id", 0, 0},		/* Line for RCS tokens */
-	{"BY", 0, 0},		/* I wonder where this should go ? */
-	{"nf", 0, 1},		/* Line break, Turn line fill off */
-	{"fi", 0, 2},		/* Line break, Turn line fill on */
-	{"sp", 0, 3},		/* Line break, line space (arg for Nr lines) */
-	{"br", 0, 4},		/* Line break */
-	{"bp", 0, 5},		/* Page break */
-	{"PP", 0, 6},
-	{"LP", 0, 6},
-	{"P", 0, 6},		/* Paragraph */
-	{"RS", 0, 7},		/* New Para + Indent start */
-	{"RE", 0, 8},		/* New Para + Indent end */
-	{"HP", 0, 9},		/* Begin hanging indent (TP without arg?) */
-	{"ad", 0, 10},		/* Line up right margin */
-	{"na", 0, 11},		/* Leave right margin unaligned */
-	{"ta", 0, 12},		/* Changes _input_ tab spacing, right? */
-	{"TH", 1, 1},		/* Title and headers */
-	{"SH", 1, 2},		/* Section */
-	{"SS", 1, 3},		/* Subsection */
-	{"IP", 1, 4},		/* New para, indent except argument 1 */
-	{"TP", 1, 5},		/* New para, indent except line 1 */
-	{"B", 2, 22},		/* Various font fiddles */
-	{"BI", 2, 23},
-	{"BR", 2, 21},
-	{"Nm", 2, 21},
-	{"I", 2, 33},
-	{"IB", 2, 32},
-	{"IR", 2, 31},
-	{"RB", 2, 12},
-	{"RI", 2, 13},
-	{"SB", 2, 42},
-	{"SM", 2, 44},
-	{"C", 2, 22},		/* PH-UX manual pages! */
-	{"CI", 2, 23},
-	{"CR", 2, 21},
-	{"IC", 2, 32},
-	{"RC", 2, 12},
-	{"so", 3, 0},
-	{"\0\0", 0}
-};
-
-/****************************************************************************
  * ifd is the manual page, ofd is the 'output' file or pipe, format it! 
  */
 static void do_file(void) {
@@ -512,6 +456,62 @@ static int fetch_word(void) {
 
 	return (nl != 0);
 }
+
+/****************************************************************************
+ * Accepted nroff commands and executors.
+ */
+
+const struct cmd_list_s {
+	char cmd[3];
+	char class;
+	char id;
+} cmd_list[] = {
+	{"\\\"", 0, 0}, 
+	{"nh", 0, 0},		/* This program never inserts hyphens */
+	{"hy", 0, 0},		/* This program never inserts hyphens */
+	{"PD", 0, 0},		/* Inter-para distance is 1 line */
+	{"DT", 0, 0},		/* Default tabs, they can't be non-default! */
+	{"IX", 0, 0},		/* Indexing for some weird package */
+	{"Id", 0, 0},		/* Line for RCS tokens */
+	{"BY", 0, 0},		/* I wonder where this should go ? */
+	{"nf", 0, 1},		/* Line break, Turn line fill off */
+	{"fi", 0, 2},		/* Line break, Turn line fill on */
+	{"sp", 0, 3},		/* Line break, line space (arg for Nr lines) */
+	{"br", 0, 4},		/* Line break */
+	{"bp", 0, 5},		/* Page break */
+	{"PP", 0, 6},
+	{"LP", 0, 6},
+	{"P", 0, 6},		/* Paragraph */
+	{"RS", 0, 7},		/* New Para + Indent start */
+	{"RE", 0, 8},		/* New Para + Indent end */
+	{"HP", 0, 9},		/* Begin hanging indent (TP without arg?) */
+	{"ad", 0, 10},		/* Line up right margin */
+	{"na", 0, 11},		/* Leave right margin unaligned */
+	{"ta", 0, 12},		/* Changes _input_ tab spacing, right? */
+	{"TH", 1, 1},		/* Title and headers */
+	{"SH", 1, 2},		/* Section */
+	{"SS", 1, 3},		/* Subsection */
+	{"IP", 1, 4},		/* New para, indent except argument 1 */
+	{"TP", 1, 5},		/* New para, indent except line 1 */
+	{"B", 2, 22},		/* Various font fiddles */
+	{"BI", 2, 23},
+	{"BR", 2, 21},
+	{"Nm", 2, 21},
+	{"I", 2, 33},
+	{"IB", 2, 32},
+	{"IR", 2, 31},
+	{"RB", 2, 12},
+	{"RI", 2, 13},
+	{"SB", 2, 42},
+	{"SM", 2, 44},
+	{"C", 2, 22},		/* PH-UX manual pages! */
+	{"CI", 2, 23},
+	{"CR", 2, 21},
+	{"IC", 2, 32},
+	{"RC", 2, 12},
+	{"so", 3, 0},
+	{"\0\0", 0}
+};
 
 static int do_command(void) {
 	char *cmd;
