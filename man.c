@@ -59,7 +59,7 @@ static char man_file[256];
 static char word[80];			/* Current word */
 
 static int right_margin = 65;		/* Don't print past this column */
-static int verbose = 1;
+static int verbose = 1;		/* print warnings about unknown macros */
 static int no_nl = 1;			/* Next NL in input file is ignored */
 static int catmode = 1;		/* Have we seen a '.XX' command ? */
 static int cur_font = 0x100;		/* Current font, 1 == Roman */
