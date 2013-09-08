@@ -8,8 +8,8 @@ PROGSRC = $(sort $(wildcard *.c))
 PROGOBJ = $(PROGSRC:.c=.o)
 PROGS = $(PROGSRC:.c=)
 
-CFLAGS = -std=gnu99 -fstack-protector-all -Wa,--noexecstack
-LDFLAGS = -static -lcrypt
+CFLAGS = -std=gnu99 -Wa,--noexecstack
+LDFLAGS = -static
 
 CC    ?= gcc
 
@@ -21,6 +21,10 @@ install: $(PROGS:%=$(DESTDIR)$(bindir)/%)
 
 clean:
 	rm -f $(PROGS)
+
+su: CFLAGS += -fstack-protector-all
+su: LDFLAGS += -lcrypt
+
 
 %: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< $(LDFLAGS)
