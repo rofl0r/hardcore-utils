@@ -826,7 +826,8 @@ static void print_word(char *pword) {
  * \(XX  Special character XX
  * \X    Print as X
  */
-
+#define checkw(X) assert(d+X<wword+(sizeof wword/sizeof wword[0]))
+#define checkl(X) assert(line_ptr+X<line+(sizeof line/sizeof line[0]))
 	char *s;
 	int *d, ch = 0;
 	int length = 0;
@@ -839,6 +840,7 @@ static void print_word(char *pword) {
 		if(*s == '\n')
 			continue;
 		if(*s != '\\') {
+			checkw(1);
 			*d++ = (ch = *s) + cur_font;
 			length++;
 		} else {
@@ -873,16 +875,19 @@ static void print_word(char *pword) {
 					++s;
 				if(s[1])
 					++s;
+				checkw(1);
 				*d++ = '*' + cur_font;
 				length++;
 				continue;
 			}
 
+			checkw(1);
 			*d++ = *s + cur_font;
 			length++;
 		}
 	}
 
+	checkw(1);
 	*d = 0;
 #ifdef SPLATTER
 	{
@@ -905,15 +910,24 @@ static void print_word(char *pword) {
 
 	if(line_ptr == 0)
 		line_ptr = line;
-	else if(!no_fill && (line_ptr[-1] & 0xFF) > ' ') {
-		if((line_ptr[-1] & 0xFF) == '.')
-			*line_ptr++ = cur_font + ' ';
-		*line_ptr++ = sp_font;
-		gaps_on_line++;
+	else {
+		assert(line_ptr > line);
+		if(!no_fill && (line_ptr[-1] & 0xFF) > ' ') {
+			if((line_ptr[-1] & 0xFF) == '.') {
+				checkl(1);
+				*line_ptr++ = cur_font + ' ';
+			}
+			checkl(1);
+			*line_ptr++ = sp_font;
+			gaps_on_line++;
+		}
 	}
 
+	checkl(length);
 	memcpy(line_ptr, wword, length * sizeof(int));
 	line_ptr += length;
+#undef checkw
+#undef checkl
 }
 
 static void line_break(void) {
