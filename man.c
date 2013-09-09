@@ -39,7 +39,6 @@
 static FILE *ofd, *ifd;
 static int *line_ptr;
 
-static int ifd_class;		/* Type of ifd, 0=stdin, 1=file, 2=pipe */
 static int keep_nl;		/* How many nl to keep til eof */
 static int optional_keep;		/* Is the next keep optional ? */
 static int pending_nl;		/* Is there a pending newline on output? */
@@ -265,6 +264,31 @@ static void step(char **pcurr, char **pnext) {
 	*pnext = next;
 }
 
+static char* which(const char* prog, char* buf, size_t buf_size) {
+	char* path = getenv("PATH");
+	if(!path) return 0;
+	while(1) {
+		path += strspn(path, ":");
+		size_t l = strcspn(path, ":");
+		if(!l) break;
+		if (snprintf(buf, buf_size, "%.*s/%s", (int)l, path, prog) >= buf_size)
+                        continue;
+		if(!access(buf, X_OK)) return buf;
+		path += l;
+	}
+	return 0;
+}
+
+static int program_exists_in_path(const char* prog) {
+	char buf[256];
+	return !!which(prog, buf, sizeof buf);
+}
+
+#define PREPROC "manpp"
+static int preprocessor_exists(void) {
+	return program_exists_in_path(PREPROC);
+}
+
 static int open_page(char *name) {
 	char *p, *command = 0;
 	char buf[256];
@@ -272,39 +296,19 @@ static int open_page(char *name) {
 	if(access(name, 0) < 0)
 		return -1;
 
-	p = strrchr(name, '.');
-	if(p) {
-		if(strcmp(p, ".gz") == 0)
-			command = "gzip -dc ";
-		if(strcmp(p, ".Z") == 0)
-			command = "uncompress -c ";
+	if((p = strrchr(name, '.'))) {
+		if(!strcmp(p, ".gz")) command = "gzip -dc ";
+		else if(!strcmp(p, ".Z")) command = "uncompress -c ";
 	}
+	if(!command) command = "cat ";
 
-	if(command) {
-		snprintf(buf, sizeof buf, "%s%s", command, name);
-		ifd = popen(buf, "r");
-		if(ifd == 0)
-			return -1;
-		ifd_class = 2;
-		return 0;
-	}
-	ifd = fopen(name, "r");
-	if(ifd == 0)
-		return -1;
-	ifd_class = 1;
+	snprintf(buf, sizeof buf, "%s%s%s", command, name, preprocessor_exists() ? " | " PREPROC : "");
+	if(!(ifd = popen(buf, "r"))) return -1;
 	return 0;
 }
 
 static void close_page(void) {
-	switch (ifd_class) {
-		case 1:
-			fclose(ifd);
-			break;
-		case 2:
-			pclose(ifd);
-			break;
-	}
-	ifd_class = 0;
+	pclose(ifd);
 }
 
 /****************************************************************************
