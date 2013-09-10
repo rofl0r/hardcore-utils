@@ -502,7 +502,6 @@ const struct cmd_list_s {
 	{"B", 2, 22},		/* Various font fiddles */
 	{"BI", 2, 23},
 	{"BR", 2, 21},
-	{"Nm", 2, 21},
 	{"I", 2, 33},
 	{"IB", 2, 32},
 	{"IR", 2, 31},
