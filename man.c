@@ -465,12 +465,16 @@ static int fetch_word(void) {
  * Accepted nroff commands and executors.
  */
 
+
+#define CMD_IDX_COMMENT 0
+#define CMD_IDX_PLAIN 1
 const struct cmd_list_s {
 	char cmd[3];
 	char class;
 	char id;
 } cmd_list[] = {
 	{"\\\"", 0, 0}, 
+	{"XX", 2, 11},		/* our custom alias for "plain word" */
 	{"nh", 0, 0},		/* This program never inserts hyphens */
 	{"hy", 0, 0},		/* This program never inserts hyphens */
 	{"PD", 0, 0},		/* Inter-para distance is 1 line */
@@ -502,6 +506,7 @@ const struct cmd_list_s {
 	{"BR", 2, 21},
 	{"Nm", 2, 21},
 	{"I", 2, 33},
+	{"ZN", 2, 33}, /* some XMan macro, comes out the same as italic above*/
 	{"IB", 2, 32},
 	{"IR", 2, 31},
 	{"RB", 2, 12},
@@ -515,6 +520,10 @@ const struct cmd_list_s {
 	{"RC", 2, 12},
 	{"so", 3, 0},
 	{"\0\0", 0}
+};
+
+static const char plain_emu[][2] = {
+	"ZX", "ds", "ZA", ""
 };
 
 static int do_command(void) {
@@ -539,6 +548,7 @@ static int do_command(void) {
 	}
 
 	if(cmd_list[i].cmd[0] == 0) {
+		ch = CMD_IDX_COMMENT;
 		if(verbose) {
 			strncpy(lbuf, cmd, 3);
 			lbuf[3] = 0;
@@ -549,15 +559,21 @@ static int do_command(void) {
 			print_word(word);
 			line_break();
 			left_indent = i;
+		} else {
+			if(strlen(cmd) == 2) for(i = 0; *plain_emu[i]; i++) {
+				if(memcmp(plain_emu[i], cmd, 2) == 0) {
+					ch = CMD_IDX_PLAIN; /* Treat as plain word */
+					break;
+				}
+			}
 		}
-
-		i = 0;		/* Treat as comment */
+		i = ch;
 	}
 
 	switch (cmd_list[i].class) {
 		case 1:	/* Parametered commands */
 			return do_argvcmd(cmd_list[i].id);
-
+		case 4: print_word(" "); /* fall-trough */
 		case 2:	/* Font changers */
 			return do_fontwords(cmd_list[i].id / 10, cmd_list[i].id % 10, 0);
 
