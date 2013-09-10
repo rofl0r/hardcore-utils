@@ -307,7 +307,10 @@ static int open_page(char *name) {
 }
 
 static void close_page(void) {
-	pclose(ifd);
+	if(ifd) {
+		pclose(ifd);
+		ifd = 0;
+	}
 }
 
 /****************************************************************************
