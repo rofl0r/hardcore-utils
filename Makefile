@@ -8,7 +8,7 @@ PROGSRC = $(sort $(wildcard *.c))
 PROGOBJ = $(PROGSRC:.c=.o)
 PROGS = $(PROGSRC:.c=)
 
-CFLAGS = -std=gnu99 -Wa,--noexecstack
+CFLAGS = -Wall -std=gnu99 -Wa,--noexecstack
 LDFLAGS = -static
 
 CC    ?= gcc
