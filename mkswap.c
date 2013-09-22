@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 	
 	size_t pagesize = sysconf(_SC_PAGE_SIZE);
 	off_t len = fdlength(fd);
-	if (len < pagesize) 
+	if (len < (ssize_t) pagesize) 
 		die("file to small");
 
 	size_t pages = (len/pagesize)-1;
