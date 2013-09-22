@@ -25,23 +25,29 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <ulz/stdio-repl.h>
 #endif
 
-__attribute__((noreturn))
-void usage(void) {
-        printf("usage: mkswap path-to-blockdevice\n");
-        exit(1);
+#if !defined(_Noreturn) && __STDC_VERSION__+0 < 201112L
+#ifdef __GNUC__
+#define _Noreturn __attribute__((noreturn))
+#else
+#define _Noreturn
+#endif
+#endif
+
+_Noreturn static void usage(void) {
+	printf("usage: mkswap path-to-blockdevice\n");
+	exit(1);
 }
 
-__attribute__((noreturn))
-void die(const char* msg) {
-        perror(msg);
-        exit(1);
+_Noreturn static void die(const char* msg) {
+	perror(msg);
+	exit(1);
 }
 
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 
 // Return how long the file at fd is, if there's any way to determine it.
-off_t fdlength(int fd) {
+static off_t fdlength(int fd) {
 	off_t bottom = 0, top = 0, pos, old;
 	int size;
 
@@ -78,15 +84,6 @@ off_t fdlength(int fd) {
 	lseek(fd, old, SEEK_SET);
 
 	return pos + 1;
-}
-
-//int fstat(int fildes, struct stat *buf);
-off_t fdlength2(int fd) {
-	struct stat s;
-	int ret;
-	if((ret = fstat(fd, &s)) == -1)
-		die("fstat");
-	return s.st_size;
 }
 
 int main(int argc, char** argv) {
