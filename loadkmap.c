@@ -71,8 +71,11 @@ int main(int argc, char** argv) {
 			struct kbentry ke = { .kb_index = j, .kb_table = i };
 			ke.kb_value = ntohs(kmap[j]);
 			if(ioctl(cfd, KDSKBENT, &ke))
-				dprintf(2, "warning: failed to set key slot %zu,%zu to %d, reason: %s\n",
-				        i, j, ke.kb_value, strerror(errno));
+				;
+				// some keymaps contain the value 638 in the first entry, which means K_ALLOCATED.
+				// not sure how to deal with this best; it seems it can be ignored.
+				/* dprintf(2, "warning: failed to set key slot %zu,%zu to %d, reason: %s\n",
+				        i, j, ke.kb_value, strerror(errno)); */
 		}
 	}
 	return 0;
