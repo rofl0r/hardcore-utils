@@ -15,6 +15,10 @@
 #endif
 #endif
 
+#ifndef PER_LINUX32
+#define PER_LINUX32 8
+#endif
+
 static _Noreturn void die(const char *msg) {
 	dprintf(2, msg);
 	exit(1);
