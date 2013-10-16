@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
 			case 'd':
 				times = 60 * 60 * 24;
 				break;
-			default: 
+			default:
 				times = 1;
 		}
 		while(times--) {
