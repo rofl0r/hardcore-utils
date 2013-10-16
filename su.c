@@ -50,7 +50,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 #endif
 
-static const char usage_text[] = 
+static const char usage_text[] =
 "Usage: su [OPTION] name\n"
 "available options (exclusive):\n"
 "- : start login shell\n"
@@ -129,14 +129,14 @@ int main(int argc, char** argv) {
 	const char* name = nameindex ? argv[nameindex] : "root";
 	if(name[0] == '-') usage();
 	int uid = getuid();
-	
+
 	char uidfn[256];
 	snprintf(uidfn, sizeof uidfn, "%s/%d", SU_DIR, uid);
-	
+
 	if(!directory_exists(SU_DIR)) {
 		if(geteuid() == 0 && mkdir(SU_DIR, 0700) == -1)
 			dprintf(2, "creation of directory " SU_DIR " for bruteforce prevention failed, consider creating it manually\n");
-	} 
+	}
 	if(uid) {
 		time_t mtime = get_mtime(uidfn);
 		if(mtime != -1 && mtime + LOGIN_DELAY_SECS > time(0)) {
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
 	struct passwd *pwd = getpwnam(name);
 	if(!pwd) goto failed;
 	if(!uid) goto success;
-	
+
 	const char *encpw;
 #ifdef HAVE_SHADOW
 	struct spwd *shpwd = getspnam(name);
@@ -186,10 +186,10 @@ int main(int argc, char** argv) {
 		new_argv = (char* const[]) {pwd->pw_shell, argv[command_index], argv[command_index+1], 0};
 	else
 		new_argv = (char* const[]) {pwd->pw_shell, 0};
-	
+
 	setenv("HOME", pwd->pw_dir, 1);
 	if(login_shell) chdir(pwd->pw_dir);
-	
+
 	if(execve(pwd->pw_shell, new_argv, environ)) perror_exit("execve");
 	return 1;
 }
