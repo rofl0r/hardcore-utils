@@ -90,10 +90,10 @@ int main(int argc, char** argv) {
 	int fd;
 	if(argc != 2) usage();
 	if ((fd  = open(argv[1], O_RDWR)) == -1) die("open");
-	
+
 	size_t pagesize = sysconf(_SC_PAGE_SIZE);
 	off_t len = fdlength(fd);
-	if (len < (ssize_t) pagesize) 
+	if (len < (ssize_t) pagesize)
 		die("file to small");
 
 	size_t pages = (len/pagesize)-1;
