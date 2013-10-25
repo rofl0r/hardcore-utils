@@ -147,6 +147,7 @@ int main(int argc, char** argv) {
 	char* pass = 0;
 	if(uid) {
 		pass = getpass("enter password:");
+		dprintf(1, "\n");
 		if(!pass) perror_exit("getpass");
 	}
 
