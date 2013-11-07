@@ -102,12 +102,12 @@ extern char** environ;
 int main(int argc, char** argv) {
 	int nameindex = -1;
 	int login_shell = 0;
-	int command_index = 0;
+	int cmd_index = 0;
 	if(argc == 1 || argc > 4) usage();
 	if(argc == 4) {
 		if(!is_c_option(argv[1])) usage();
 		else {
-			command_index = 1;
+			cmd_index = 1;
 			nameindex = 3;
 		}
 	} else if (argc == 3) {
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
 			login_shell = 1;
 		} else if(is_c_option(argv[1])) {
 			nameindex = 0;
-			command_index = 1;
+			cmd_index = 1;
 		} else usage();
 	} else if (argc == 2) {
 		if(is_login_option(argv[1])) {
@@ -178,19 +178,22 @@ int main(int argc, char** argv) {
 	if(setuid(pwd->pw_uid)) perror_exit("setuid");
 	char* const* new_argv;
 	char shellbuf[256];
+	char* shell = pwd->pw_shell;
 	if(login_shell) {
 		snprintf(shellbuf, sizeof shellbuf, "-%s", pwd->pw_shell);
-		new_argv = (char* const[]) {shellbuf, 0};
+		new_argv = (char* const[]) {shell, shellbuf, 0};
 		setenv("LOGNAME", name, 1);
 		if(getenv("USER")) setenv("USER", name, 1);
-	} else if(command_index)
-		new_argv = (char* const[]) {pwd->pw_shell, argv[command_index], argv[command_index+1], 0};
-	else
-		new_argv = (char* const[]) {pwd->pw_shell, 0};
+	} else if(cmd_index) {
+		shell = "/bin/sh";
+		new_argv = (char* const[]) {shell, argv[cmd_index], argv[cmd_index+1], 0};
+	} else {
+		new_argv = (char* const[]) {shell, 0};
+	}
 
 	setenv("HOME", pwd->pw_dir, 1);
 	if(login_shell) chdir(pwd->pw_dir);
 
-	if(execve(pwd->pw_shell, new_argv, environ)) perror_exit("execve");
+	if(execve(shell, new_argv, environ)) perror_exit("execve");
 	return 1;
 }
