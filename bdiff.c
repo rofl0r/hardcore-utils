@@ -31,10 +31,10 @@ static int diff(int f1, int f2) {
 	if(fstat(f1, &st1)) return 1;
 	if(fstat(f2, &st2)) return 1;
 	min = st1.st_size;
-	size_t l;
-	off_t p1, p2;
+	off_t p1, p2, l;
 	if (st2.st_size != min) {
-		printf("sizes differ! %zu, %zu\n", st1.st_size, st2.st_size);
+		printf("sizes differ! %llu, %llu\n",
+		       (long long) st1.st_size, (long long) st2.st_size);
 		if (st2.st_size < min) min = st2.st_size;
 	}
 	p1 = 0;
@@ -43,11 +43,13 @@ static int diff(int f1, int f2) {
 		l = 0;
 		while(p1 < min && fetch(f1, &p1) != fetch(f2, &p2)) l++;
 		if(l) {
-			printf("difference at offset %zu of size %zu\n", p1-l-1,  l);
+			printf("difference at offset %llu of size %llu\n",
+			       (long long) p1-l-1,  (long long) l);
 			diffs++;
 		}
 	}
-	printf("%zu differences in %zu bytes detected.\n", diffs, min);
+	printf("%zu differences in %llu bytes detected.\n",
+	        diffs, (long long) min);
 	return diffs != 0;
 }
 
