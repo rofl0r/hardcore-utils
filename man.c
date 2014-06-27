@@ -10,7 +10,7 @@
  *
  * The environment is checked for these variables:
  *   MANSECT=1:2:3:4:5:6:7:8:9		# Manual section search order.
- *   MANPATH=/usrlocal/man:/usr/man	# Directorys to search for man tree.
+ *   MANPATH=/usr/local/man:/usr/man	# Directorys to search for man tree.
  *   PAGER=more				# pager progam to use.
  *   PATH=...				# Search for gzip/uncompress
  *
