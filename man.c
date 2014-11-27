@@ -868,17 +868,23 @@ static void print_word(char *pword) {
 			} else if(isalpha(*s) || strchr("!&^[]|~", *s))
 				continue;
 			else if(*s == '(' || *s == '*') {
-				/* XXX Humm character xlate */
-
-				if(*s == '*')
+			/* XXX Humm character xlate - http://mdocml.bsd.lv/man/mandoc_char.7.html */
+				int out = '*';
+				if(*s == '*') {
 					if(s[1])
 						++s;
+				} else if(s[1] == 'm' && s[2] == 'i') {
+					out = '-';
+					s+=2;
+					goto K;
+				}
 				if(s[1])
 					++s;
 				if(s[1])
 					++s;
+				K:
 				checkw(1);
-				*d++ = '*' + cur_font;
+				*d++ = out + cur_font;
 				length++;
 				continue;
 			}
