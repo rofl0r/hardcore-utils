@@ -148,6 +148,9 @@ BEGIN {
 		$0 = ".sp\n.RS\n.nf\n\\fB"
 	} else if($1 == ".Ed") {
 		$0 = "\\fP\n.fi\n.RE"
+	} else if($1 == ".Ex") {
+		locname = NF==3?$3:name
+		$0 = "The \n.BR " locname "\nutility exits 0 on success, and >0 if an error occurs.\n"
 	} else if($1 == ".Dd") {
 		$0 = substr($0, 5)
 		trigger_header($0, "", "")
