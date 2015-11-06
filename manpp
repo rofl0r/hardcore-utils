@@ -209,6 +209,8 @@ BEGIN {
 				out = brify(cfunc(out),1)
 				indent_after = 1
 				break;
+			} else if (i == 2 && $i == "Ev" && $1 == ".It") {
+				# ignore
 			} else if (i == 2 && $i == "Xo") {
 				out = ""
 				break
