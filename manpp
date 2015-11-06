@@ -244,12 +244,13 @@ BEGIN {
 		$1 = "-"
 	} else if($1 == ".Nm") {
 		if(NF > 1) {
-			$1 = ""
+			sub(/^\.Nm /, "")
 			name = $0
-			$1 = ".Nm"
+			$0 = ".Nm " $0
 		} else {
 			$2 = name
 		}
+		$0 = brify($0, 0);
 	} else if($1 == ".At") {
 		$0 = "some AT&T UNIX version"
 	} else if($1 == ".Bx") {
@@ -363,8 +364,6 @@ BEGIN {
 		$1 = ".SH"
 	} else if($1 == ".Ss") {
 		$1 = ".SS"
-	} else if($1 == ".Nm") {
-		$0 = brify($0, 0)
 # xman stuff starts here
 	} else if($1 == ".ZN") {
 		$0 = italify($0, 0)
