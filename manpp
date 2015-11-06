@@ -204,7 +204,7 @@ BEGIN {
 	} else if($1 == ".Pp") {
 		$0 = ".sp\n"
 	} else if($1 == ".It" || $1 == ".Op") {
-		if(blockmode && $1 == ".It") print "\n"
+		if(blockmode && $1 == ".It" && $2 != "Pa") print "\n"
 		#if(blockmode) indent_after=1
 		out = $1 == ".Op" ? "[" : "";
 		for(i = 2; i <= NF; i++) {
@@ -214,6 +214,10 @@ BEGIN {
 				out = brify(cfunc(out),1)
 				indent_after = 1
 				break;
+			} else if (i == 2 && $i == "Pa" && $1 == ".It") {
+				sub(/^\.It Pa/, ".I")
+				out = $0 "\n.br"
+				break
 			} else if (i == 2 && $i == "Ev" && $1 == ".It") {
 				# ignore
 			} else if (i == 2 && $i == "Xo") {
