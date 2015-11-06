@@ -131,7 +131,7 @@ BEGIN {
 		update_var(current_var, $0)
 		$0 = ""
 # mdoc commands
-# http://mdocml.bsd.lv/mdoc.7.html
+# http://web.archive.org/web/20140327172811/http://mdocml.bsd.lv/mdoc.7.html
 	} else if($1 == ".Bl") {
 		$0 = ""
 		$0 = ".sp\n.RS\n.nf\n"
