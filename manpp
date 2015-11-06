@@ -196,6 +196,8 @@ BEGIN {
 		if(substr(out, length(out)) == " ")
 			out = substr(out, 0, length(out) -1)
 		$0 = "(“" out "”)"
+	} else if($1 == ".Pp") {
+		$0 = ".sp\n"
 	} else if($1 == ".It" || $1 == ".Op") {
 		if(blockmode && $1 == ".It") print "\n"
 		#if(blockmode) indent_after=1
