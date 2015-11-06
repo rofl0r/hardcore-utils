@@ -161,6 +161,8 @@ BEGIN {
 			$0 = substr($0, 0, length($0) - 2)
 		} else safe = ""
 		$0 = "“" substr($0, 5) "”" safe
+	} else if($1 == ".Dv") {
+		sub(/^\.Dv /, "")
 	} else if($1 == ".Xr") {
 		$0 = $2 "(" $3 ")"
 	} else if($1 == ".An") {
