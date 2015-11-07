@@ -254,7 +254,8 @@ BEGIN {
 					i += 2;
 				}
 			} else {
-				out = out $i;
+				sp = i+1<=NF?" ":""
+				out = out $i sp;
 			}
 		}
 		if($1 == ".Op") out = out "\n]"
