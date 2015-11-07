@@ -269,11 +269,11 @@ BEGIN {
 		sep = NF > 1 ? "\n" : ""
 		$0 = ".BR \"" name "\"" sep fields(2, NF)
 	} else if($1 == ".At") {
-		$0 = "some AT&T UNIX version"
+		$0 = "AT&T UNIX"
 	} else if($1 == ".Bx") {
-		$0 = "some BSD version"
+		$0 = "BSD"
 	} else if($1 == ".Nx") {
-		$0 = "some NetBSD version"
+		$0 = "NetBSD"
 	} else if($1 == ".Ux") {
 		$0 = "UNIX"
 	} else if($1 == ".St") {
