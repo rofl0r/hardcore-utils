@@ -188,8 +188,18 @@ BEGIN {
 		fnblock = $0
 		$0 = ""
 	} else if($1 == ".Fa") {
-		fnblock = fnblock " " substr($0, 5)
-		$0 = ""
+		if(fnblock != "") {
+			fnblock = fnblock " " substr($0, 5)
+			$0 = ""
+		} else {
+			l = unquotewords(substr($0, 5), foo)
+			$0 = ".XX "
+			for(i=0;i<l;i++) {
+				sp = i+1<l?", ":"";
+				$0 = $0 foo[i] sp
+			}
+			$0 = italify($0, 0)
+		}
 	} else if($1 == ".Fc") {
 		$0 = brify(cfunc(fnblock), 1)
 		fnblock = ""
