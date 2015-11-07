@@ -377,6 +377,11 @@ BEGIN {
 		$0 = "\n"
 	} else if($1 == ".D1" || $1 == ".Dl") {
 		$1 = "\t"
+	} else if($1 == ".Aq") {
+		cut=4
+		if(NF > 2 && length($2)==2) cut+=3
+		$0 = substr($0, cut)
+		$1 = "<" $1 ">"
 	} else if($1 == ".Qq") {
 		$0 = "\"" $2 "\"" fields(3, NF)
 	} else if($1 == ".Sq") {
