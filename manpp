@@ -84,9 +84,12 @@ function italify(str,appendnl,   temp) {
 	if(appendnl) str = str "\n"
 	return str
 }
-function fields(start, last,    buf,i) {
+function fields(start, last,    buf,i,sp) {
 	buf = ""
-	for(i=start;i<=last;i++) buf = buf " " $i
+	for(i=start;i<=last;i++) {
+		sp = i+1<=last ? " " : ""
+		buf = buf $i sp
+	}
 	return buf
 }
 function update_var(var_name, complete_line) {
