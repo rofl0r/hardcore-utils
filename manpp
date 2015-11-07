@@ -260,14 +260,12 @@ BEGIN {
 	} else if($1 == ".Nd") {
 		$1 = "-"
 	} else if($1 == ".Nm") {
-		if(NF > 1) {
-			sub(/^\.Nm /, "")
-			name = $0
-			$0 = ".Nm " $0
-		} else {
-			$2 = name
+		if(name == "" && NF == 2) {
+			name = $2
+			$0 = ".Nm"
 		}
-		$0 = brify($0, 0);
+		sep = NF > 1 ? "\n" : ""
+		$0 = ".BR \"" name "\"" sep fields(2, NF)
 	} else if($1 == ".At") {
 		$0 = "some AT&T UNIX version"
 	} else if($1 == ".Bx") {
