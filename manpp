@@ -272,6 +272,8 @@ BEGIN {
 		$0 = "some BSD version"
 	} else if($1 == ".Nx") {
 		$0 = "some NetBSD version"
+	} else if($1 == ".Ux") {
+		$0 = "UNIX"
 	} else if($1 == ".St") {
 		if(0) ;
 		else if($2 == "-p1003.1-88")
