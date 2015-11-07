@@ -20,7 +20,6 @@ function trigger_header(hdate, hsect, htitle) {
 	if(sect && date && title)
 		print ".TH", title, sect, date
 }
-
 # turns something like aa "b c" d "e f g"
 # into a 0-indexed array with the members(aa, b c, d, e f g)
 # returns length of array
@@ -84,6 +83,11 @@ function italify(str,appendnl,   temp) {
 	str = ".I \"" substr(str, index(str, " ")+1) "\""
 	if(appendnl) str = str "\n"
 	return str
+}
+function fields(start, last,    buf,i) {
+	buf = ""
+	for(i=start;i<=last;i++) buf = buf " " $i
+	return buf
 }
 function update_var(var_name, complete_line) {
 	if(!current_var) {
@@ -370,6 +374,8 @@ BEGIN {
 	} else if($1 == ".Bk" || $1 == ".Ek" || $1 == ".Xc" || $1 == ".Os") {
 		# comments go here
 		$0 = "\n"
+	} else if($1 == ".Qq") {
+		$0 = "\"" $2 "\"" fields(3, NF)
 	} else if($1 == ".Sh") {
 		$1 = ".SH"
 	} else if($1 == ".Ss") {
