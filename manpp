@@ -375,6 +375,8 @@ BEGIN {
 	} else if($1 == ".Bk" || $1 == ".Ek" || $1 == ".Xc" || $1 == ".Os") {
 		# comments go here
 		$0 = "\n"
+	} else if($1 == ".D1" || $1 == ".Dl") {
+		$1 = "\t"
 	} else if($1 == ".Qq") {
 		$0 = "\"" $2 "\"" fields(3, NF)
 	} else if($1 == ".Sq") {
