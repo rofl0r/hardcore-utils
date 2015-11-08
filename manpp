@@ -208,6 +208,8 @@ BEGIN {
 		for(i = 2; i <= NF; i+=2)
 			out = out $i " "
 		$0 = brify(out, 0)
+	} else if($1 == ".Ic") {
+		$0 = brify($0, 0)
 	} else if($1 == ".Tn" || $1 == ".Va" || $1 == ".Fx") {
 		$0 = substr($0, 5)
 	} else if($1 == ".Po") {
