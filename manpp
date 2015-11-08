@@ -401,7 +401,7 @@ BEGIN {
 		$0 = "\"" $2 "\"" fields(3, NF)
 	} else if($1 == ".Sq") {
 		$0 = "'" $2 "'" fields(3, NF)
-	} else if($1 == ".Sx") {
+	} else if($1 == ".Sx" || $1 == ".Sy") {
 		$0 = brify($0, 0)
 	} else if($1 == ".Sh") {
 		$1 = ".SH"
