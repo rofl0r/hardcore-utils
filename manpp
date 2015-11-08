@@ -222,6 +222,9 @@ BEGIN {
 		$0 = $2 $4
 	} else if($1 == ".Pp") {
 		$0 = ".sp\n"
+	} else if($1 == ".Oo" || $1 == ".Oc") {
+		# denotes .Op block start/end - ignore
+		$0 = ""
 	} else if($1 == ".It" || $1 == ".Op") {
 		if(blockmode && $1 == ".It" && $2 != "Pa") print "\n"
 		#if(blockmode) indent_after=1
