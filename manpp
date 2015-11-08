@@ -404,6 +404,8 @@ BEGIN {
 		$0 = "\n"
 	} else if($1 == ".D1" || $1 == ".Dl") {
 		$1 = "\t"
+	} else if($1 == ".Ev") {
+		$0 = brify($0, 0)
 	} else if($1 == ".Aq") {
 		cut=4
 		if(NF > 2 && length($2)==2) cut+=3
