@@ -8,6 +8,7 @@ config.mak
 *.bin
 *.patch
 *.diff
+bdiff
 bin2hex
 bin2sh
 dumpkmap
@@ -23,3 +24,4 @@ sleep
 su
 swapon
 true
+usbreset
