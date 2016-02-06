@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 			else printf("#!/bin/sh");
 			printf("\necho -ne \"");
 		}
-		printf("\\x%X", buf[0]);
+		printf("\\x%02X", buf[0]);
 		cnt++;
 	}
 	if(cnt % cpl) printf("\"\n");
