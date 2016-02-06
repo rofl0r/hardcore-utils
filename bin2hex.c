@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 	if(!f) { perror("fopen"); return 1; }
 	unsigned char buf[1];
 	while(fread(buf, 1, 1, f)) {
-		printf("%x", buf[0]);
+		printf("%02x", buf[0]);
 	}
 	printf("\n");
 	fclose(f);
