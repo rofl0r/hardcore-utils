@@ -26,16 +26,20 @@ int main(int argc, char** argv) {
 	if(!f) { perror("fopen"); return 1; }
 	unsigned long long cnt = 0;
 	unsigned char buf[1];
+	static const char redir[][3] = {">", ">>"};
+	int printed = 0;
 	while(fread(buf, 1, 1, f)) {
 		if(!(cnt % cpl)) {
-			if(cnt) printf("\"");
-			else printf("#!/bin/sh");
-			printf("\necho -ne \"");
+			if(cnt) {
+				printf("\" %s f", redir[printed]);
+				printed = 1;
+			} else printf("#!/bin/sh");
+			printf("\n\necho -ne \"");
 		}
 		printf("\\x%02X", buf[0]);
 		cnt++;
 	}
-	if(cnt % cpl) printf("\"\n");
+	if(cnt % cpl) printf("\" %s f\n", redir[printed]);
 	fclose(f);
 	return 0;
 }
