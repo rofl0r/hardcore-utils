@@ -37,20 +37,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
-static const char copyright[] =
-"@(#) Copyright (c) 1993\n\
-	The Regents of the University of California.  All rights reserved.\n";
-#endif /* not lint */
-
-#if 0
-#ifndef lint
-static char sccsid[] = "@(#)pr.c	8.2 (Berkeley) 4/16/94";
-#endif /* not lint */
-#endif
-
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -65,9 +51,43 @@ __FBSDID("$FreeBSD$");
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
-#include "pr.h"
-#include "extern.h"
+/*
+ * parameter defaults
+ */
+#define	CLCNT		1
+#define	INCHAR		'\t'
+#define	INGAP		8
+#define	OCHAR		'\t'
+#define OGAP		8
+#define	LINES		66
+#define	NMWD		5
+#define	NMCHAR		'\t'
+#define	SCHAR		'\t'
+#define	PGWD		72
+#define SPGWD		512
+
+/*
+ * misc default values
+ */
+#define	HDFMT		"%s %s Page %d\n\n\n"
+#define	HEADLEN		5
+#define	TAILLEN		5
+#define	TIMEFMTD	"%e %b %H:%M %Y"
+#define	TIMEFMTM	"%b %e %H:%M %Y"
+#define	FNAME		""
+#define	LBUF		8192
+#define	HDBUF		512
+
+/*
+ * structure for vertical columns. Used to balance cols on last page
+ */
+struct vcol {
+	char *pt;		/* ptr to col */
+	int cnt;		/* char count */
+};
+
 
 /*
  * pr:	a printing and pagination filter. If multiple input files
@@ -116,6 +136,32 @@ static int	errcnt;		/* error count on file processing */
 static char	digs[] = "0123456789"; /* page number translation map */
 
 static char	fnamedefault[] = FNAME;
+
+/* forward decls for internal helper funcs */
+static void mfail(void);
+static void pfail(void);
+static void usage(void);
+static void flsh_errs(void);
+static void terminate(int which_sig);
+static int prtail(int cnt, int incomp);
+static int setup(int argc, char *argv[]);
+static int onecol(int argc, char *argv[]);
+static int vertcol(int argc, char *argv[]);
+static int horzcol(int argc, char *argv[]);
+static int mulfile(int argc, char *argv[]);
+static void addnum(char *buf, int wdth, int line);
+static int inskip(FILE *inf, int pgcnt, int lncnt);
+static int prhead(char *buf, const char *fname, int pagcnt);
+static int inln(FILE *inf, char *buf, int lim, int *cps, int trnc, int *mor);
+static int otln(char *buf, int cnt, int *svips, int *svops, int mor);
+static FILE *nxtfile(int argc, char **argv, const char **fname, char *buf, int dt);
+
+/* forward decls for egetopt */
+extern int eopterr;
+extern int eoptind;
+extern int eoptopt;
+extern char *eoptarg;
+static int egetopt(int nargc, char * const *nargv, const char *ostr);
 
 int
 main(int argc, char *argv[])
@@ -171,8 +217,7 @@ ttypause(int pagecnt)
  * onecol:	print files with only one column of output.
  *		Line length is unlimited.
  */
-int
-onecol(int argc, char *argv[])
+static int onecol(int argc, char *argv[])
 {
 	int cnt = -1;
 	int off;
@@ -323,8 +368,7 @@ err:
 /*
  * vertcol:	print files with more than one column of output down a page
  */
-int
-vertcol(int argc, char *argv[])
+static int vertcol(int argc, char *argv[])
 {
 	char *ptbf;
 	char **lstdat = NULL;
@@ -654,8 +698,7 @@ out:
 /*
  * horzcol:	print files with more than one column of output across a page
  */
-int
-horzcol(int argc, char *argv[])
+static int horzcol(int argc, char *argv[])
 {
 	char *ptbf;
 	int pln;
@@ -804,8 +847,7 @@ err:
  * mulfile:	print files with more than one column of output and
  *		more than one file concurrently
  */
-int
-mulfile(int argc, char *argv[])
+static int mulfile(int argc, char *argv[])
 {
 	char *ptbf;
 	int j;
@@ -1024,8 +1066,7 @@ out:
  *	trnc:	throw away data more than lim up to \n
  *	mor:	set if more data in line (not truncated)
  */
-int
-inln(FILE *inf, char *buf, int lim, int *cps, int trnc, int *mor)
+static int inln(FILE *inf, char *buf, int lim, int *cps, int trnc, int *mor)
 {
 	int col;
 	int gap = ingap;
@@ -1129,8 +1170,7 @@ inln(FILE *inf, char *buf, int lim, int *cps, int trnc, int *mor)
  *	mor:	output line not complete in this buf; more data to come.
  *		1 is more, 0 is complete, -1 is no \n's
  */
-int
-otln(char *buf, int cnt, int *svips, int *svops, int mor)
+static int otln(char *buf, int cnt, int *svips, int *svops, int mor)
 {
 	int ops;		/* last col output */
 	int ips;		/* last col in buf examined */
@@ -1266,8 +1306,7 @@ otln(char *buf, int cnt, int *svips, int *svops, int mor)
  *	pgcnt	number of pages to skip
  *	lncnt	number of lines per page
  */
-int
-inskip(FILE *inf, int pgcnt, int lncnt)
+static int inskip(FILE *inf, int pgcnt, int lncnt)
 {
 	int c;
 	int cnt;
@@ -1294,8 +1333,7 @@ inskip(FILE *inf, int pgcnt, int lncnt)
  *	buf	array to store proper date for the header.
  *	dt	if set skips the date processing (used with -m)
  */
-FILE *
-nxtfile(int argc, char **argv, const char **fname, char *buf, int dt)
+static FILE *nxtfile(int argc, char **argv, const char **fname, char *buf, int dt)
 {
 	FILE *inf = NULL;
 	time_t tv_sec;
@@ -1426,8 +1464,7 @@ nxtfile(int argc, char **argv, const char **fname, char *buf, int dt)
  *		part of the column. The usage of addnum	currently treats
  *		numbers as part of the column so spaces may be replaced.
  */
-void
-addnum(char *buf, int wdth, int line)
+static void addnum(char *buf, int wdth, int line)
 {
 	char *pt = buf + wdth;
 
@@ -1451,8 +1488,7 @@ addnum(char *buf, int wdth, int line)
  *	fname	fname field for header
  *	pagcnt	page number
  */
-int
-prhead(char *buf, const char *fname, int pagcnt)
+static int prhead(char *buf, const char *fname, int pagcnt)
 {
 	int ips = 0;
 	int ops = 0;
@@ -1486,8 +1522,7 @@ prhead(char *buf, const char *fname, int pagcnt)
  *	cnt	number of lines of padding needed
  *	incomp	was a '\n' missing from last line output
  */
-int
-prtail(int cnt, int incomp)
+static int prtail(int cnt, int incomp)
 {
 	if (nohead) {
 		/*
@@ -1546,9 +1581,9 @@ prtail(int cnt, int incomp)
 /*
  * terminate():	when a SIGINT is recvd
  */
-void
-terminate(int which_sig __unused)
+static void terminate(int which_sig)
 {
+	(void) which_sig;
 	flsh_errs();
 	exit(1);
 }
@@ -1558,8 +1593,7 @@ terminate(int which_sig __unused)
  * flsh_errs():	output saved up diagnostic messages after all normal
  *		processing has completed
  */
-void
-flsh_errs(void)
+static void flsh_errs(void)
 {
 	char buf[BUFSIZ];
 
@@ -1572,20 +1606,17 @@ flsh_errs(void)
 		(void)fputs(buf, stderr);
 }
 
-void
-mfail(void)
+static void mfail(void)
 {
 	(void)fputs("pr: memory allocation failed\n", err);
 }
 
-void
-pfail(void)
+static void pfail(void)
 {
 	(void)fprintf(err, "pr: write failure, %s\n", strerror(errno));
 }
 
-void
-usage(void)
+static void usage(void)
 {
 	(void)fputs(
 	 "usage: pr [+page] [-col] [-adFfmprt] [-e[ch][gap]] [-h header]\n",
@@ -1600,8 +1631,7 @@ usage(void)
  * setup:	Validate command args, initialize and perform sanity
  *		checks on options
  */
-int
-setup(int argc, char *argv[])
+static int setup(int argc, char *argv[])
 {
 	int c;
 	int d_first;
@@ -1857,8 +1887,168 @@ setup(int argc, char *argv[])
 
 	(void) setlocale(LC_TIME, (Lflag != NULL) ? Lflag : "");
 
+#if 0 /* FIXME : figure out how to do this portably */
 	d_first = (*nl_langinfo(D_MD_ORDER) == 'd');
 	timefrmt = strdup(d_first ? TIMEFMTD : TIMEFMTM);
-
+#else
+	timefrmt = strdup(TIMEFMTM);
+#endif
 	return(0);
 }
+
+/* embedded contents of egetopt.c START */
+
+int	eopterr = 1;		/* if error message should be printed */
+int	eoptind = 1;		/* index into parent argv vector */
+int	eoptopt;		/* character checked for validity */
+char	*eoptarg;		/* argument associated with option */
+
+#define	BADCH	(int)'?'
+
+static char	emsg[] = "";
+
+static int egetopt(int nargc, char * const *nargv, const char *ostr)
+{
+	static char *place = emsg;	/* option letter processing */
+	char *oli;			/* option letter list index */
+	static int delim;		/* which option delimiter */
+	char *p;
+	static char savec = '\0';
+
+	if (savec != '\0') {
+		*place = savec;
+		savec = '\0';
+	}
+
+	if (!*place) {
+		/*
+		 * update scanning pointer
+		 */
+		if ((eoptind >= nargc) ||
+		    ((*(place = nargv[eoptind]) != '-') && (*place != '+'))) {
+			place = emsg;
+			return (-1);
+		}
+
+		delim = (int)*place;
+		if (place[1] && *++place == '-' && !place[1]) {
+			/*
+			 * found "--"
+			 */
+			++eoptind;
+			place = emsg;
+			return (-1);
+		}
+	}
+
+	/*
+	 * check option letter
+	 */
+	if ((eoptopt = (int)*place++) == (int)':' || (eoptopt == (int)'?') ||
+	    !(oli = strchr(ostr, eoptopt))) {
+		/*
+		 * if the user didn't specify '-' as an option,
+		 * assume it means -1 when by itself.
+		 */
+		if ((eoptopt == (int)'-') && !*place)
+			return (-1);
+		if (strchr(ostr, '#') && (isdigit(eoptopt) ||
+		    (((eoptopt == (int)'-') || (eoptopt == (int)'+')) &&
+		      isdigit(*place)))) {
+			/*
+			 * # option: +/- with a number is ok
+			 */
+			for (p = place; *p != '\0'; ++p) {
+				if (!isdigit(*p))
+					break;
+			}
+			eoptarg = place-1;
+
+			if (*p == '\0') {
+				place = emsg;
+				++eoptind;
+			} else {
+				place = p;
+				savec = *p;
+				*place = '\0';
+			}
+			return (delim);
+		}
+
+		if (!*place)
+			++eoptind;
+		if (eopterr) {
+			if (!(p = strrchr(*nargv, '/')))
+				p = *nargv;
+			else
+				++p;
+			(void)fprintf(stderr, "%s: illegal option -- %c\n",
+			    p, eoptopt);
+		}
+		return (BADCH);
+	}
+	if (delim == (int)'+') {
+		/*
+		 * '+' is only allowed with numbers
+		 */
+		if (!*place)
+			++eoptind;
+		if (eopterr) {
+			if (!(p = strrchr(*nargv, '/')))
+				p = *nargv;
+			else
+				++p;
+			(void)fprintf(stderr,
+				"%s: illegal '+' delimiter with option -- %c\n",
+				p, eoptopt);
+		}
+		return (BADCH);
+	}
+	++oli;
+	if ((*oli != ':') && (*oli != '?')) {
+		/*
+		 * don't need argument
+		 */
+		eoptarg = NULL;
+		if (!*place)
+			++eoptind;
+		return (eoptopt);
+	}
+
+	if (*place) {
+		/*
+		 * no white space
+		 */
+		eoptarg = place;
+	} else if (*oli == '?') {
+		/*
+		 * no arg, but NOT required
+		 */
+		eoptarg = NULL;
+	} else if (nargc <= ++eoptind) {
+		/*
+		 * no arg, but IS required
+		 */
+		place = emsg;
+		if (eopterr) {
+			if (!(p = strrchr(*nargv, '/')))
+				p = *nargv;
+			else
+				++p;
+			(void)fprintf(stderr,
+			    "%s: option requires an argument -- %c\n", p,
+			    eoptopt);
+		}
+		return (BADCH);
+	} else {
+		/*
+		 * arg has white space
+		 */
+		eoptarg = nargv[eoptind];
+	}
+	place = emsg;
+	++eoptind;
+	return (eoptopt);
+}
+
+/* embedded contents of egetopt.c END */
