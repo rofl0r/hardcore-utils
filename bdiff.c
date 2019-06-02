@@ -11,25 +11,18 @@
 #include <ulz/stdio-repl.h>
 #endif
 
-static int lgetc(int fd) {
-	unsigned char buf;
-	int res;
-	if((res = read(fd, &buf, 1)) <= 0) return res;
-	return buf;
-}
-
-static int fetch(int fd, off_t *cnt) {
-	int c = lgetc(fd);
+static int fetch(FILE *f, off_t *cnt) {
+	int c = fgetc(f);
 	if(c >= 0) *cnt = *cnt + 1;
 	return c;
 }
 
-static int diff(int f1, int f2) {
+static int diff(FILE *f1, FILE* f2) {
 	off_t min;
 	size_t diffs = 0;
 	struct stat st1, st2;
-	if(fstat(f1, &st1)) return 1;
-	if(fstat(f2, &st2)) return 1;
+	if(fstat(fileno(f1), &st1)) return 1;
+	if(fstat(fileno(f2), &st2)) return 1;
 	min = st1.st_size;
 	off_t p1, p2, l;
 	if (st2.st_size != min) {
@@ -69,5 +62,5 @@ int main(int argc, char** argv) {
 		perror("can not read");
 		return 1;
 	}
-	return diff(open(argv[1], O_RDONLY), open(argv[2], O_RDONLY));
+	return diff(fopen(argv[1], "r"), fopen(argv[2], "r"));
 }
