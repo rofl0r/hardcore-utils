@@ -24,7 +24,7 @@ static int diff(FILE *f1, FILE* f2) {
 	if(fstat(fileno(f1), &st1)) return 1;
 	if(fstat(fileno(f2), &st2)) return 1;
 	min = st1.st_size;
-	off_t p1, p2, l;
+	off_t p1, p2, l, diffbytes = 0;
 	if (st2.st_size != min) {
 		printf("sizes differ! %llu, %llu\n",
 		       (long long) st1.st_size, (long long) st2.st_size);
@@ -39,10 +39,11 @@ static int diff(FILE *f1, FILE* f2) {
 			printf("difference at offset %llu of size %llu\n",
 			       (long long) p1-l-1,  (long long) l);
 			diffs++;
+			diffbytes += l;
 		}
 	}
-	printf("%zu differences in %llu bytes detected.\n",
-	        diffs, (long long) min);
+	printf("%zu differences in %llu out of %llu bytes detected.\n",
+	        diffs, (long long) diffbytes, (long long) min);
 	return diffs != 0;
 }
 
