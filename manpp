@@ -120,6 +120,13 @@ function replace_vars(line,   var, p) {
 	}
 	return line
 }
+function shift(n,   k) {
+	while (n > 0) {
+		k += length($n) + length(FS)
+		n--
+	}
+	$0 = substr($0, k + 1)
+}
 function print_error(lineno, text) {
 	print "ERROR: @" lineno ": " text
 }
@@ -480,6 +487,15 @@ BEGIN {
 	} else if($1 == ".ds") { #set a string variable.
 		update_var($2, $0)
 		$0 = ""
+	} else if($1 == ".UR") {
+		url = $2
+		gsub(":", "", url)
+		sub("//", "://", url)
+		$0 = ""
+	} else if($1 == ".UE") {
+		shift(1)
+		$0 = "<" url ">" $0
+		url = ""
 	} else if($1 == ".ds" ||
 	          $1 == ".ce" ||
 	          $1 == ".ll" ||
