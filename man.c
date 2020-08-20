@@ -739,7 +739,7 @@ static int do_argvcmd(int cmd_id) {
 			keep_nl = 1;
 			pending_nl = 1;
 
-			do_fontwords(1, 1, 0);
+			do_fontwords(2, 2, 0);
 			break;
 
 		case 15:
