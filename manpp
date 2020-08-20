@@ -137,6 +137,26 @@ BEGIN {
 	if(!current_var) {
 		$0 = replace_vars($0)
 		sub(/^\.[ ]+/, ".")
+		if(!in_macro) {
+		if($1 == ".ie" && substr($0, length($0) - 2) != "\\{\\") {
+			if($2 == "n" || $2 == "!t" || $2 == "e" || $2 == "!o") {
+				ie_taken = 1
+				$0 = substr($0, length($1 FS $2 FS)+1)
+			} else {
+				ie_taken = 0
+				$0 = ""
+			}
+		} else if($1 == ".el" && substr($0, length($0) - 2) != "\\{\\") {
+			if(ie_taken) $0 = "";
+			else $0 = substr($0, length($1 FS)+1)
+			ie_taken = 0
+		} else if($1 == ".if" && substr($0, length($0) - 2) != "\\{\\") {
+			if($2 == "n" || $2 == "!t" || $2 == "e" || $2 == "!o")
+				$0 = substr($0, length($1 FS $2 FS)+1);
+			else
+				$0 = ""
+		}
+		}
 	}
 
 	if(0) ;
