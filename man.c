@@ -467,55 +467,62 @@ static int fetch_word(void) {
  * Accepted nroff commands and executors.
  */
 
-const struct cmd_list_s {
+enum cmd_class {
+	CCLASS_NONE = 0,
+	CCLASS_PARAMETERED,
+	CCLASS_FONTCHANGER,
+	CCLASS_SO,
+};
+
+static const struct cmd_list_s {
 	char cmd[3];
-	char class;
+	char class; /* enum cmd_class */
 	char id;
 } cmd_list[] = {
-	{"\\\"", 0, 0},
-	{"nh", 0, 0},		/* This program never inserts hyphens */
-	{"hy", 0, 0},		/* This program never inserts hyphens */
-	{"PD", 0, 0},		/* Inter-para distance is 1 line */
-	{"DT", 0, 0},		/* Default tabs, they can't be non-default! */
-	{"IX", 0, 0},		/* Indexing for some weird package */
-	{"Id", 0, 0},		/* Line for RCS tokens */
-	{"BY", 0, 0},		/* I wonder where this should go ? */
-	{"nf", 0, 1},		/* Line break, Turn line fill off */
-	{"fi", 0, 2},		/* Line break, Turn line fill on */
-	{"sp", 0, 3},		/* Line break, line space (arg for Nr lines) */
-	{"br", 0, 4},		/* Line break */
-	{"bp", 0, 5},		/* Page break */
-	{"PP", 0, 6},
-	{"LP", 0, 6},
-	{"P", 0, 6},		/* Paragraph */
-	{"RS", 0, 7},		/* New Para + Indent start */
-	{"RE", 0, 8},		/* New Para + Indent end */
-	{"HP", 0, 9},		/* Begin hanging indent (TP without arg?) */
-	{"ad", 0, 10},		/* Line up right margin */
-	{"na", 0, 11},		/* Leave right margin unaligned */
-	{"ta", 0, 12},		/* Changes _input_ tab spacing, right? */
-	{"TH", 1, 1},		/* Title and headers */
-	{"SH", 1, 2},		/* Section */
-	{"SS", 1, 3},		/* Subsection */
-	{"IP", 1, 4},		/* New para, indent except argument 1 */
-	{"TP", 1, 5},		/* New para, indent except line 1 */
-	{"B", 2, 22},		/* Various font fiddles */
-	{"BI", 2, 23},
-	{"BR", 2, 21},
-	{"I", 2, 33},
-	{"IB", 2, 32},
-	{"IR", 2, 31},
-	{"RB", 2, 12},
-	{"RI", 2, 13},
-	{"SB", 2, 42},
-	{"SM", 2, 44},
-	{"C", 2, 22},		/* PH-UX manual pages! */
-	{"CI", 2, 23},
-	{"CR", 2, 21},
-	{"IC", 2, 32},
-	{"RC", 2, 12},
-	{"so", 3, 0},
-	{"\0\0", 0, 0}
+	{"\\\"", CCLASS_NONE, 0},
+	{"nh",   CCLASS_NONE, 0},	/* This program never inserts hyphens */
+	{"hy",   CCLASS_NONE, 0},	/* This program never inserts hyphens */
+	{"PD",   CCLASS_NONE, 0},	/* Inter-para distance is 1 line */
+	{"DT",   CCLASS_NONE, 0},	/* Default tabs, they can't be non-default! */
+	{"IX",   CCLASS_NONE, 0},	/* Indexing for some weird package */
+	{"Id",   CCLASS_NONE, 0},	/* Line for RCS tokens */
+	{"BY",   CCLASS_NONE, 0},	/* I wonder where this should go ? */
+	{"nf",   CCLASS_NONE, 1},	/* Line break, Turn line fill off */
+	{"fi",   CCLASS_NONE, 2},	/* Line break, Turn line fill on */
+	{"sp",   CCLASS_NONE, 3},	/* Line break, line space (arg for Nr lines) */
+	{"br",   CCLASS_NONE, 4},	/* Line break */
+	{"bp",   CCLASS_NONE, 5},	/* Page break */
+	{"PP",   CCLASS_NONE, 6},
+	{"LP",   CCLASS_NONE, 6},
+	{"P",    CCLASS_NONE, 6},	/* Paragraph */
+	{"RS",   CCLASS_NONE, 7},	/* New Para + Indent start */
+	{"RE",   CCLASS_NONE, 8},	/* New Para + Indent end */
+	{"HP",   CCLASS_NONE, 9},	/* Begin hanging indent (TP without arg?) */
+	{"ad",   CCLASS_NONE, 10},	/* Line up right margin */
+	{"na",   CCLASS_NONE, 11},	/* Leave right margin unaligned */
+	{"ta",   CCLASS_NONE, 12},	/* Changes _input_ tab spacing, right? */
+	{"TH",   CCLASS_PARAMETERED, 1},/* Title and headers */
+	{"SH",   CCLASS_PARAMETERED, 2},/* Section */
+	{"SS",   CCLASS_PARAMETERED, 3},/* Subsection */
+	{"IP",   CCLASS_PARAMETERED, 4},/* New para, indent except argument 1 */
+	{"TP",   CCLASS_PARAMETERED, 5},/* New para, indent except line 1 */
+	{"B",    CCLASS_FONTCHANGER, 22},/* Various font fiddles */
+	{"BI",   CCLASS_FONTCHANGER, 23},
+	{"BR",   CCLASS_FONTCHANGER, 21},
+	{"I",    CCLASS_FONTCHANGER, 33},
+	{"IB",   CCLASS_FONTCHANGER, 32},
+	{"IR",   CCLASS_FONTCHANGER, 31},
+	{"RB",   CCLASS_FONTCHANGER, 12},
+	{"RI",   CCLASS_FONTCHANGER, 13},
+	{"SB",   CCLASS_FONTCHANGER, 42},
+	{"SM",   CCLASS_FONTCHANGER, 44},
+	{"C",    CCLASS_FONTCHANGER, 22},/* PH-UX manual pages! */
+	{"CI",   CCLASS_FONTCHANGER, 23},
+	{"CR",   CCLASS_FONTCHANGER, 21},
+	{"IC",   CCLASS_FONTCHANGER, 32},
+	{"RC",   CCLASS_FONTCHANGER, 12},
+	{"so",   CCLASS_SO, 0},
+	{"\0\0", CCLASS_NONE, 0}
 };
 
 static int do_command(void) {
@@ -551,13 +558,13 @@ static int do_command(void) {
 	}
 
 	switch (cmd_list[i].class) {
-		case 1:	/* Parametered commands */
+		case CCLASS_PARAMETERED:	/* Parametered commands */
 			return do_argvcmd(cmd_list[i].id);
 
-		case 2:	/* Font changers */
+		case CCLASS_FONTCHANGER:	/* Font changers */
 			return do_fontwords(cmd_list[i].id / 10, cmd_list[i].id % 10, 0);
 
-		case 3:	/* .so */
+		case CCLASS_SO:	/* .so */
 			fetch_word();
 			if(strlen(man_file) + 4 < sizeof man_file)
 				strcat(man_file, word);
@@ -569,6 +576,7 @@ static int do_command(void) {
 			ungetc('\r', ifd);
 			break;
 
+		case CCLASS_NONE:
 		default:
 			do_skipeol();
 			if(cmd_list[i].id)
