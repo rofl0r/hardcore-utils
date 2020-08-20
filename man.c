@@ -90,7 +90,8 @@ static void usage(void)
 	fprintf(stderr, "man [-w] [-v|-q] [section-number] page\n"
 	"-w\tonly print the location of matching manpages\n"
 	"-v\tForce verbose output. (default)\n"
-	"-q\tForce quiet output.\n");
+	"-q\tForce quiet output.\n"
+	"`page` may be specified as `-`, in which case stdin is used.\n");
 	exit(1);
 }
 
@@ -99,14 +100,14 @@ static void usage(void)
  */
 int main(int argc, char **argv) {
 	ofd = 0;
-	ifd = stdin;
+	ifd = 0;
 	int do_pclose_ofd = 0;
 	int ar;
 	char *mansect = 0;
 	char *manname = 0;
 
 	for(ar = 1; ar < argc; ar++)
-		if(argv[ar][0] == '-') {
+		if(argv[ar][0] == '-' && argv[ar][1]) {
 			char *p;
 			for(p = argv[ar] + 1; *p; p++)
 				switch (*p) {
@@ -120,6 +121,9 @@ int main(int argc, char **argv) {
 						verbose = 0;
 						break;
 				}
+		} else if(argv[ar][0] == '-') {
+			manname = "<stdin>";
+			ifd = stdin;
 		} else if(isdigit(argv[ar][0]))
 			mansect = argv[ar];
 		else if(manname == 0)
@@ -134,7 +138,7 @@ int main(int argc, char **argv) {
 
 	if(manname == 0) usage();
 
-	if(find_page(manname, mansect) < 0) {
+	if(!ifd && find_page(manname, mansect) < 0) {
 		if(mansect)
 			fprintf(stderr, "No entry for %s in section %s of the manual.\n", manname, mansect);
 		else
