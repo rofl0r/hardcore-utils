@@ -463,7 +463,6 @@ BEGIN {
 	          $1 == ".D" ||
 	          $1 == ".R" ||
 	          $1 == ".Sp" ||
-	          $1 == ".Ve" ||
 
 		0) { #other unknown stuff
 		$0 = ""
