@@ -48,6 +48,7 @@ static int is_tty;
 static int current_line;		/* Line number = ? */
 static int gaps_on_line;		/* Gaps on line for adjustments */
 static int flg_w;
+static int disable_pp;
 
 static int line[256];			/* Buffer for building output line */
 static char whitespace[256];
@@ -87,10 +88,11 @@ static void print_doc_footer(void);
 
 static void usage(void)
 {
-	fprintf(stderr, "man [-w] [-v|-q] [section-number] page\n"
+	fprintf(stderr, "man [-w] [-v|-q] [-P] [section-number] page\n"
 	"-w\tonly print the location of matching manpages\n"
 	"-v\tForce verbose output. (default)\n"
 	"-q\tForce quiet output.\n"
+	"-P\tDisable usage of manpp preprocessor\n"
 	"`page` may be specified as `-`, in which case stdin is used.\n");
 	exit(1);
 }
@@ -119,6 +121,9 @@ int main(int argc, char **argv) {
 						break;
 					case 'q':
 						verbose = 0;
+						break;
+					case 'P':
+						disable_pp = 1;
 						break;
 				}
 		} else if(argv[ar][0] == '-') {
@@ -289,7 +294,7 @@ static int program_exists_in_path(const char* prog) {
 
 #define PREPROC "manpp"
 static int preprocessor_exists(void) {
-	return program_exists_in_path(PREPROC);
+	return disable_pp ? 0 : program_exists_in_path(PREPROC);
 }
 
 static int open_page(char *name) {
