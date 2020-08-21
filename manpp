@@ -203,6 +203,10 @@ BEGIN {
 		#process multiline groff string vars.
 		update_var(current_var, $0)
 		$0 = ""
+	} else if(ignore_until != "") {
+		if($0 == ignore_until)
+			ignore_until = ""
+		$0 = ""
 # troff macro
 # https://www.lemoda.net/unix/troff-dictionary/index.html
 	} else if(in_macro && $1 != "..") {
@@ -516,6 +520,12 @@ BEGIN {
 # http://web.cecs.pdx.edu/~trent/gnu/groff/groff.html
 # lowercase stuff supported by man.c:
 # nh hy nf fi sp br bp ad na ta 
+	} else if($1 == ".ig") {
+		if($2 != "")
+			ignore_until = $2
+		else
+			ignore_until = ".."
+		$0 = 0
 	} else if($1 == ".ds") { #set a string variable.
 		update_var($2, $0)
 		$0 = ""
