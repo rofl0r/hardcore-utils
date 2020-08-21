@@ -257,7 +257,7 @@ BEGIN {
 	} else if($1 == ".Dt") {
 		trigger_header("", $3, $2)
 		$0 = ""
-	} else if($1 == ".Dq") {
+	} else if($1 == ".Dq" || $1 == ".Ql") {
 		if ($NF == "." || $NF == ",") {
 			safe = $NF;
 			$0 = substr($0, 0, length($0) - 2)
