@@ -135,6 +135,21 @@ function replace_vars(line,   var, p, c, start, len) {
 	}
 	return line
 }
+function groff_escape(line,   nr, repl, p) {
+	# replace \N'34' with "
+	while((p = match(line, /\\N\'([0-9]+)\'/))) {
+		nr = 0+substr(line, RSTART+3, RLENGTH-4)
+		if(nr < 32 || nr > 127) {
+			print("ERROR: escapes < 32 || > 127 not implemented");
+			repl = " "
+		} else if(nr == 34) {
+			repl = "\\\""
+		} else
+			repl = sprintf("%c", nr)
+		line = substr(line, 0, RSTART-1) repl substr(line, RSTART+RLENGTH)
+	}
+	return line
+}
 function shift(n,   k) {
 	while (n > 0) {
 		k += length($n) + length(FS)
@@ -157,8 +172,10 @@ BEGIN {
 	}
 
 	if(!current_var) {
-		$0 = replace_vars($0)
-		sub(/^\.[ ]+/, ".")
+		if($1 != ".ds") {
+			$0 = groff_escape(replace_vars($0))
+			sub(/^\.[ ]+/, ".")
+		}
 		if(!in_macro) {
 		if($1 == ".ie" && substr($0, length($0) - 2) != "\\{\\") {
 			if($2 == "n" || $2 == "!t" || $2 == "e" || $2 == "!o") {
