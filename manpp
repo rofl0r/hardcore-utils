@@ -489,7 +489,7 @@ BEGIN {
 			$0 = "Version 3 of the Single UNIX Specification"
 		else if($2 == "-svid4")
 			$0 = "System V Interface Definition, Fourth Edition (“SVID4”)"
-	} else if($1 == ".Pa" || $1 == ".Em") {
+	} else if($1 == ".Pa" || $1 == ".Em" || $1 == ".Vt") {
 		$0 = italify($0, 0)
 	} else if($1 == ".Bk" || $1 == ".Ek" || $1 == ".Xc" || $1 == ".Os") {
 		# comments go here
