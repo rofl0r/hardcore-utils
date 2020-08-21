@@ -369,6 +369,9 @@ static void do_file(void) {
 					keep_nl--;
 			}
 
+			if(nl == 1 && no_fill)
+				line_break();
+
 			if(nl == 1 && (word[0] == '.' ||
 				       (word[0] == '\'' && strcmp(word, "'\\\"") == 0) ||
 				       (word[0] == '\'' && strcmp(word, "'''") == 0)
@@ -377,8 +380,6 @@ static void do_file(void) {
 				if(do_command() < 0)
 					break;
 			} else {
-				if(nl == 1 && no_fill)
-					line_break();
 				if(*whitespace)
 					print_word(whitespace);
 				print_word(word);
