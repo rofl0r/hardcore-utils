@@ -106,17 +106,32 @@ function update_var(var_name, complete_line) {
 	}
 }
 
-function replace_vars(line,   var, p) {
+function replace_vars(line,   var, p, c, start, len) {
 	# match(s,r) test whether s contains a substring matched by r
 	# return index or 0, sets RSTART and RLENGTH
-	while((p = match(line, /\\\*\(([A-Za-z0-9_]+)/))) {
-		var = substr(line, RSTART+3, RLENGTH-3)
+	while((p = match(line, /\\\*([\(\[]{0,1}[A-Za-z0-9_]+)/))) {
+		c = substr(line, RSTART+2, 1)
+		if(c == "[" || c == "(") {
+			start = 1
+			if(c == "(") len = 2
+			else len = RLENGTH-3
+		} else {
+			start = 0
+			len = 1
+		}
+		var = substr(line, RSTART+2+start, len)
+		len += start
+		if(c == "[") {
+			if(substr(line, RSTART+2+len, 1) != "]")
+				print "ERROR: expected ']'"
+			len++
+		}
 		if(!var in groff_vars) print "ERROR: $var not in groff_vars"
-		if(groff_vars[var] ~ /\\\*\(([A-Za-z0-9_]+)/) {
-			print "ERROR: groff variable substitution attempts infite loop"
+		if(groff_vars[var] ~ /\\\*/) {
+			print "ERROR: groff variable recursion"
 			exit 1
 		}
-		line = substr(line, 0, RSTART-1) groff_vars[var] substr(line, RSTART+RLENGTH)
+		line = substr(line, 0, RSTART-1) groff_vars[var] substr(line, RSTART+2+len)
 	}
 	return line
 }
