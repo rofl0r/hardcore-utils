@@ -198,8 +198,16 @@ BEGIN {
 		}
 	}
 
-	if(0) ;
-	else if(current_var) {
+	if(0) {
+	} else if($1 == ".EX") {
+		example_block = 1;
+		$0 = ".sp\n.RS\n.nf\n\\fB"
+	} else if(example_block) {
+		if($1 == ".EE") {
+			example_block = 0;
+			$0 = "\\fP\n.fi\n.RE";
+		}
+	} else if(current_var) {
 		#process multiline groff string vars.
 		update_var(current_var, $0)
 		$0 = ""
