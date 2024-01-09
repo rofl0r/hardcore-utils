@@ -68,6 +68,8 @@ static int right_adjust = 1;		/* Adjust right margin */
 static int standard_tab = 5;		/* Amount left margin stepped by */
 
 
+static int lineno = 1;
+
 static int find_page(char *name, char *sect);
 static void step(char **pcurr, char **pnext);
 static int open_page(char *name);
@@ -403,6 +405,7 @@ static int fetch_word(void) {
 		p++;
 
 	while((ch = fgetc(ifd)) != EOF && isspace(ch)) {
+		if(ch == '\n') lineno++;
 		if(nl && no_fill && ch != '.' && ch != '\n')
 			break;
 		if(nl && !catmode && ch == '\n') {
@@ -558,7 +561,7 @@ static int do_command(void) {
 			line_break();
 			i = left_indent;
 			left_indent = 0;
-			snprintf(word, sizeof word, "**** Unknown formatter command: .%s", lbuf);
+			snprintf(word, sizeof word, "**** Unknown formatter command: .%s @%d", lbuf, lineno);
 			print_word(word);
 			line_break();
 			left_indent = i;
